@@ -1,6 +1,6 @@
 ### Info
 
-hdfm displays weather and traffic maps recieved from iHeartRadio HD radio stations. The program relys on nrsc5 to decode and dump radio station data for it to display.
+**hdfm** displays weather and traffic maps recieved from iHeartRadio HD radio stations. The program relys on nrsc5 to decode and dump radio station data for it to display.
 
 This is my first major python project and I only have about 3 months of experience so forgive me if I made any mistakes. This prgram is designed for rtl-sdr enthusiasts or possibly people who want to put a navigation system in their vehicle. There are lots of things that need to be improved, namely audio. When run on a mac, the audio seems to work fine, but this will likely be different on a raspberry pi or other linux os. So far, I've successfully tested it with 2 different iHeartRadio stations, but you may run across some that it won't work with. Keep in mind, this will NOT work anything other than iHeartRadio HD stations. If you have any issues, please post them and I'll see what I can do to help.
 
