@@ -1,6 +1,6 @@
-**hdfm** displays weather and traffic maps received from iHeartRadio HD radio stations. The program relies on nrsc5 to decode and dump radio station data for it to display.
+**hdfm** displays weather and traffic maps received from iHeartRadio HD radio stations. It relies on nrsc5 to decode and dump the radio station data for it to process and display.
 
-This is my first major python project and I only have about 3 months of experience so forgive me if I made any mistakes. This program is designed for rtl-sdr enthusiasts or possibly people who want to put a navigation system in their vehicle. There are lots of things that need to be improved, namely audio. When run on a mac, the audio seems to work fine, but this will likely be different on a raspberry pi or other linux os. So far, I've successfully tested it with 2 different iHeartRadio stations, but you may run across some that it won't work with. Keep in mind, this will NOT work anything other than iHeartRadio HD stations. If you have any issues, please post them and I'll see what I can do to help.
+This is my first major python project and I only have about 3 months of experience so forgive me if I made any mistakes. This program is designed for rtl-sdr enthusiasts or possibly people who want to put a navigation system in their vehicle. There are lots of things that need to be improved, namely audio. When run on a mac, the audio seems to work fine, but this will likely be different on a linux os. So far, I've successfully tested it with 2 different iHeartRadio stations, but you may run across some that it won't work with. Keep in mind, this will NOT work anything other than iHeartRadio HD stations. If you have any issues, please post them and I'll get back as soon as possible.
 
 ### Packages
 
@@ -10,7 +10,7 @@ The only required package other than python is nrsc5, developed by Theori http:/
 
 ### Libraries
 
-The following python libraries are required and will likely need to be installed (pip install 'library'):
+The following python libraries are required and will need to be installed (pip install 'library'):
 
  * Tkinter
  * Pillow (PIL, Python Imaging Library)
@@ -35,7 +35,7 @@ An RTL-SDR dongle must be plugged in for this program to function proerly.
 
 	Usage:  [OPTIONS]  frequency
 	
-    Option              Meaning
+     Option              Meaning
      -h, --help          Show this message
      -c <channel>        HDFM channel, for stations with subchannels (default = 0)
      -p <ppm>            PPM error correction (default = 0)
@@ -47,7 +47,7 @@ Tune to 104.5 MHz:
 
      $ python ./hdfm.py 104.5
 
-Tune to 107.1 MHz and save all recieved maps to ./Recieved Maps/:
+Tune to 104.5 MHz and save all recieved maps to ./Recieved Maps/:
 
      $ python ./hdfm.py -s ./Recieved\ Maps/ 104.5
 
