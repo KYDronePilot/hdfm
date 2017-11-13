@@ -13,6 +13,7 @@ The only required package other than python is nrsc5, developed by Theori http:/
 The following python libraries are required and will need to be installed (pip install 'library'):
 
  * Tkinter
+ * ImageTk
  * Pillow (PIL, Python Imaging Library)
 
 The following python libraries are required, but most likely already installed.
