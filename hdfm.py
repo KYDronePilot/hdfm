@@ -71,7 +71,7 @@ def getUSMap(lat1, lon1, lat2, lon2):
     pixel_y2 = lat2 * 3565 / (y_top_coord - math.asinh(math.tan(math.radians(38.898))))
     
     # Crop the HiRes US map to the converted map coordinate bounds.
-    cropped_map = US_map.crop((pixel_x1, pixel_y1, pixel_x2, pixel_y2))
+    cropped_map = US_map.crop((int(pixel_x1), int(pixel_y1), int(pixel_x2), int(pixel_y2)))
     
     # Resize the cropped map to a resonable 900x900 image.
     cropped_map.resize((900,900))
