@@ -2,7 +2,7 @@
 # See README for more info.
 
 from PIL import Image, ImageTk, ImageFont, ImageDraw # For image manipulation.
-import Tkinter as tk # For opening a weather and traffic gui/display.
+import tkinter as tk # For opening a weather and traffic gui/display.
 import os # For multiple system operations.
 import glob # For finding files in a directory.
 import re # For getting coordinates from weather config file.
@@ -53,29 +53,29 @@ def startNRSC5(dump_dir, freq, channel, ppm, log_level):
 def getUSMap(lat1, lon1, lat2, lon2):
     # Open HiRes openstreetmap of the US.
     US_map = Image.open(usmap_dir)
-    
+
     # Convert top lattitude bound of HiRes US map to a linear form, since lattitudinal lines on a mercator map increase exponentially.
     y_top_coord = math.asinh(math.tan(math.radians(52.482780)))
-    
+
     # Convert top and bottom bound of weather map to the same linear form described above.
     lat1 = y_top_coord - math.asinh(math.tan(math.radians(lat1)))
     lat2 = y_top_coord - math.asinh(math.tan(math.radians(lat2)))
-    
+
     # Zero out longitudes by adding the leftmost longitude of the HiRes map and use a ratio of a know longitude and pixel x-value the get
     # the pixel coordinates of the left and right map bounds. Since longitude is linear on a mercator map, the above process is unnecessary.
     pixel_x1 = (lon1 + 130.781250) * 7162 / 39.34135
     pixel_x2 = (lon2 + 130.781250) * 7162 / 39.34135
-    
+
     # Use ratio of a known lattitude and pixel y-value to calculate the top and bottom pixel coordinates.
     pixel_y1 = lat1 * 3565 / (y_top_coord - math.asinh(math.tan(math.radians(38.898))))
     pixel_y2 = lat2 * 3565 / (y_top_coord - math.asinh(math.tan(math.radians(38.898))))
-    
+
     # Crop the HiRes US map to the converted map coordinate bounds.
     cropped_map = US_map.crop((int(pixel_x1), int(pixel_y1), int(pixel_x2), int(pixel_y2)))
-    
+
     # Resize the cropped map to a resonable 900x900 image.
     cropped_map.resize((900,900))
-    
+
     # Return the cropped map.
     return cropped_map
 
@@ -109,11 +109,11 @@ def getCroppedMap():
             cropped_map = getUSMap(float(coords[0]), float(coords[1]), float(coords[2]), float(coords[3]))
             # Make sure the above code is only run once.
             map_onetime = 0
-        
+
         # Set area_map to the local map backround and return the said image.
         global area_map
         area_map = cropped_map.convert("RGBA")
-        
+
     return area_map
 
 # Initialize variables to hold command line arguments to be passed to nrsc5.
@@ -205,7 +205,7 @@ while True:
                 weather_final.save(os.path.abspath(save) + "/Weather Map " + t + ".png")
         # Remove the already processed overlay.
         os.remove(file)
-    
+
     # Finds the recieved traffic tiles and pastes them in their proper position on a final traffic image.
     for tile in glob.glob(os.path.abspath(dump_dir) + '/TMT_*'):
         # Based on each tile's name, paste them in the right spot on the final image and update the list that checks if all tiles have been updated.
@@ -249,7 +249,7 @@ while True:
         traffic_id = 1
         # Remove tile after it has been processed.
         os.remove(tile)
-    
+
     # If a save directory has been selected and all tiles have been updated, save a composite traffic image.
     if save != "":
         if traffic_save_check == [1, 1, 1, 1, 1, 1, 1, 1, 1]:
@@ -257,19 +257,13 @@ while True:
             traffic_final.save(os.path.abspath(save) + "/Traffic Map " + t + ".png")
             # Reset the tile update tracker.
             traffic_save_check = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-        
+
     # Update traffic display only if tile has been updated.
     if traffic_id == 1:
         traffic_id = 0
         traffic_display = ImageTk.PhotoImage(traffic_final)
         traffic_label.configure(image=traffic_display)
         traffic.update()
-    
+
     # Delay for 0.5 seconds before looking for new traffic and weather data.
     time.sleep(0.5)
-
-
-
-
-
-
