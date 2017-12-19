@@ -30,7 +30,7 @@ The following python libraries are required, but most likely already installed.
 
 ## Requirements
 
-An RTL-SDR dongle must be plugged in for this program to function proerly.
+An RTL-SDR dongle must be plugged in for this program to function properly.
 
 ### Usage:
 
