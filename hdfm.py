@@ -3,7 +3,10 @@
 # See README for more info.
 
 from PIL import Image, ImageTk, ImageFont, ImageDraw  # For image manipulation.
-import tkinter as tk  # For opening a weather and traffic gui/display.
+try: # For opening a weather and traffic gui/display.
+    import tkinter as tk
+except ImportError:
+    import Tkinter as tk
 import os  # For multiple system operations.
 import glob  # For finding files in a directory.
 import re  # For getting coordinates from weather config file.
