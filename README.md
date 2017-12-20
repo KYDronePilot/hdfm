@@ -58,7 +58,9 @@ Tune to 104.5 MHz, set the ppm correction to 48, and decode HD channel 2 (HD2)
 
 ### Received Images
 ![alt text](https://image.ibb.co/kOnwqR/Traffic_Map_10_28_2017_09_41_13_PM.png)
+
 Traffic Map 10-28-2017 09-41-13 PM.png
 
 ![alt text](https://preview.ibb.co/d4jLH6/Weather_Map_10_28_2017_10_38_08_PM.png)
+
 Weather Map 10-28-2017 10-38-08 PM.png
