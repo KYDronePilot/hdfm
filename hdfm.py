@@ -19,13 +19,13 @@ font_dir = "./GlacialIndifference-Regular.otf"
 # Included OSM map of the US.
 usmap_dir = "./USMap.png"
 
-# Create a dump directory if one does not exist in the same directory as this
-# script.
-if not os.path.exists("./Dump"):
-    os.makedirs("./Dump")
-
 # Set the dump directory to "Dump" in the same directory as this script.
 dump_dir = "./Dump"
+
+# Create a dump directory if one does not exist in the same directory as this
+# script.
+if not os.path.exists(dump_dir):
+    os.makedirs(dump_dir)
 
 # For checking if a recieved weather overlay is updated or just a repeat.
 prev_weather_file = ""
@@ -53,9 +53,8 @@ Option        Meaning
 # Starts nrsc5, the core behind nrscdec program. Takes variables for the dump
 # directory, frequency, HDFM channel, ppm correction, and log level.
 def startNRSC5(dump_dir, freq, channel, ppm, log_level):
-    subprocess.call("nrsc5 -l " + log_level + " -p " + ppm +
-                    " --dump-aas-files " + dump_dir + " " + freq + " " +
-                    channel, shell=True)
+    subprocess.call(["nrsc5", "-l", log_level, "-p", ppm,
+                     "--dump-aas-files", dump_dir, freq, channel])
 
 
 # Takes coordinates from the weather config and returns a map of the area
@@ -247,42 +246,13 @@ while True:
     for tile in glob.glob(os.path.abspath(dump_dir) + '/TMT_*'):
         # Based on each tile's name, paste them in the right spot on the final
         # image and update the list that checks if all tiles have been updated.
-        if "_1_1_" in tile:
+        match = re.search('_([123])_([123])_', tile)
+        if match:
+            x = int(match.group(2)) - 1
+            y = int(match.group(1)) - 1
             tile11 = Image.open(tile).convert("RGBA")
-            traffic_final.paste(tile11, (0, 0))
-            traffic_save_check[0] = 1
-        if "_1_2_" in tile:
-            tile11 = Image.open(tile).convert("RGBA")
-            traffic_final.paste(tile11, (200, 0))
-            traffic_save_check[1] = 1
-        if "_1_3_" in tile:
-            tile11 = Image.open(tile).convert("RGBA")
-            traffic_final.paste(tile11, (400, 0))
-            traffic_save_check[2] = 1
-        if "_2_1_" in tile:
-            tile11 = Image.open(tile).convert("RGBA")
-            traffic_final.paste(tile11, (0, 200))
-            traffic_save_check[3] = 1
-        if "_2_2_" in tile:
-            tile11 = Image.open(tile).convert("RGBA")
-            traffic_final.paste(tile11, (200, 200))
-            traffic_save_check[4] = 1
-        if "_2_3_" in tile:
-            tile11 = Image.open(tile).convert("RGBA")
-            traffic_final.paste(tile11, (400, 200))
-            traffic_save_check[5] = 1
-        if "_3_1_" in tile:
-            tile11 = Image.open(tile).convert("RGBA")
-            traffic_final.paste(tile11, (0, 400))
-            traffic_save_check[6] = 1
-        if "_3_2_" in tile:
-            tile11 = Image.open(tile).convert("RGBA")
-            traffic_final.paste(tile11, (200, 400))
-            traffic_save_check[7] = 1
-        if "_3_3_" in tile:
-            tile11 = Image.open(tile).convert("RGBA")
-            traffic_final.paste(tile11, (400, 400))
-            traffic_save_check[8] = 1
+            traffic_final.paste(tile11, (x * 200, y * 200))
+            traffic_save_check[x + y*3] = 1
         # Prevents the display from updating unless a tile has been updated.
         traffic_id = 1
         # Remove tile after it has been processed.
@@ -291,12 +261,12 @@ while True:
     # If a save directory has been selected and all tiles have been updated,
     # save a composite traffic image.
     if save != "":
-        if traffic_save_check == [1, 1, 1, 1, 1, 1, 1, 1, 1]:
+        if traffic_save_check == [1] * 9:
             t = datetime.datetime.now().strftime("%m-%d-%Y %I-%M-%S %p")
             traffic_final.save(os.path.abspath(save) +
                                "/Traffic Map " + t + ".png")
             # Reset the tile update tracker.
-            traffic_save_check = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+            traffic_save_check = [0] * 9
 
     # Update traffic display only if tile has been updated.
     if traffic_id == 1:
