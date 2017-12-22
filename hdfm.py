@@ -207,7 +207,7 @@ nrsc_thread = threading.Thread(target=startNRSC5,
 nrsc_thread.start()
 
 # Used to keep track of when all the traffic tiles are updated.
-traffic_save_check = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+traffic_save_check = [0] * 9
 
 while True:
     # Looks for new weather overlays and updates the weather display when
@@ -246,20 +246,26 @@ while True:
 
     # Finds the recieved traffic tiles and pastes them in their proper position
     # on a final traffic image.
-    for tile in glob.glob(os.path.abspath(dump_dir) + '/TMT_*'):
+    for tile_path in glob.glob(os.path.abspath(dump_dir) + '/TMT_*'):
         # Based on each tile's name, paste them in the right spot on the final
         # image and update the list that checks if all tiles have been updated.
-        match = re.search('_([123])_([123])_', tile)
+        match = re.search('_([123])_([123])_', tile_path)
         if match:
+            # Retrieve zero indexed tile coordinates from file name.
             x = int(match.group(2)) - 1
             y = int(match.group(1)) - 1
-            tile11 = Image.open(tile).convert("RGBA")
-            traffic_final.paste(tile11, (x * 200, y * 200))
+            # Open traffic tile.
+            tile_image = Image.open(tile_path).convert("RGBA")
+            # Paste tile on main traffic image at coordinates obtained above
+            # times dimensions of tiles (200x200).
+            traffic_final.paste(tile_image, (x * 200, y * 200))
+            # Update save check list to 1 for address of identifying number of
+            # tile just pasted (0-8).
             traffic_save_check[x + y*3] = 1
         # Prevents the display from updating unless a tile has been updated.
         traffic_id = 1
         # Remove tile after it has been processed.
-        os.remove(tile)
+        os.remove(tile_path)
 
     # If a save directory has been selected and all tiles have been updated,
     # save a composite traffic image.
