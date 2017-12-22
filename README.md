@@ -56,6 +56,16 @@ Tune to 104.5 MHz, set the ppm correction to 48, and decode HD channel 2 (HD2)
 
      $ python ./hdfm.py -p 48 -c 1 104.5
 
+### Compatible Stations
+
+A list of nearby HD Radio stations can be found by entering you zip code at this website:
+https://hdradio.com/stations
+
+A list of all iHeartRadio run stations in the US can be found here:
+https://en.wikipedia.org/wiki/List_of_radio_stations_owned_by_iHeartMedia
+
+The station must be HD and run by iHeartRadio for this program to function properly.
+
 ### Received Images
 ![alt text](https://image.ibb.co/kOnwqR/Traffic_Map_10_28_2017_09_41_13_PM.png)
 
