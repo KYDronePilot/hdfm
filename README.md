@@ -42,15 +42,16 @@ An RTL-SDR dongle must be plugged in for this program to function properly.
      -p <ppm>            PPM error correction (default = 0)
      -s <dir>            Directory to save weather and traffic images to (default = none)
      -l <1-3>            Log level output from nrsc5 (default = 3, only debug info)
+	 -a <null>           Display album/station art
 ### Examples:
 
 Tune to 104.5 MHz:
 
      $ python ./hdfm.py 104.5
 
-Tune to 104.5 MHz and save all recieved maps to ./Recieved Maps/:
+Tune to 104.5 MHz, display album/station artwork, and save all received maps to ./Received Maps/:
 
-     $ python ./hdfm.py -s ./Recieved\ Maps/ 104.5
+     $ python ./hdfm.py -a -s ./Recieved\ Maps/ 104.5
 
 Tune to 104.5 MHz, set the ppm correction to 48, and decode HD channel 2 (HD2)
 

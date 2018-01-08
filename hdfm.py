@@ -50,7 +50,8 @@ Option        Meaning
  -c <channel>  HDFM channel, for stations with subchannels (default = 1)
  -p <ppm>      PPM error correction (default = 0)
  -s <dir>      Directory to save weather and traffic images to (default = none)
- -l <1-3>      Log level output from nrsc5 (default = 3, only debug info)\n""")
+ -l <1-3>      Log level output from nrsc5 (default = 3, only debug info)
+ -a <null>     Display album/station art\n""")
 
 
 # Starts nrsc5, the core behind nrscdec program. Takes variables for the dump
@@ -150,6 +151,7 @@ channel = "0"
 ppm = "0"
 save = ""
 log_level = "3"
+art_boo = False
 
 # If no arguments are entered, print the help page.
 if len(sys.argv) == 1:
@@ -168,6 +170,8 @@ for arg in range(len(sys.argv)):
         log_level = sys.argv[arg + 1]
     elif sys.argv[arg] == "-h" or sys.argv[arg] == "--help":
         sys.exit(printHelp())
+    elif sys.argv[arg] == "-a":
+        art_boo = True
 
 # Assign last arg to the frequency of the HDFM station.
 freq = sys.argv[len(sys.argv) - 1]
@@ -199,6 +203,16 @@ traffic_display = ImageTk.PhotoImage(traffic_final)
 traffic_label = tk.Label(traffic, image=traffic_display)
 traffic_label.pack()
 traffic.update()
+
+# Initialize album/station art window if specified.
+if art_boo == True:
+    art = tk.Toplevel()
+    art.title("HDFM Art")
+    art_image = Image.new("RGBA", (200, 200))
+    art_display = ImageTk.PhotoImage(art_image)
+    art_label = tk.Label(art, image=art_display)
+    art_label.pack()
+    art.update()
 
 # Start a thread for nrsc5, so that when this script is stopped, nrsc5 is
 # stopped as well.
@@ -283,6 +297,21 @@ while True:
         traffic_display = ImageTk.PhotoImage(traffic_final)
         traffic_label.configure(image=traffic_display)
         traffic.update()
+    
+    # If art option specified, check for new files and update art display.
+    if art_boo == True:
+        for art_path in glob.glob(os.path.abspath(dump_dir) + "/*"):
+            # In case save dir is same as dump dir.
+            if not art_path.endswith("M.png"):
+                # Only acknowledge files with .png and .jpg extensions.
+                if art_path.endswith(".png") or art_path.endswith(".jpg"):
+                    # Open art image file and update display.
+                    art_image = Image.open(art_path).convert("RGBA")
+                    art_display = ImageTk.PhotoImage(art_image)
+                    art_label.configure(image=art_display)
+                    art.update()
+                    # Remove art file after updating.
+                    os.remove(art_path)
 
     # Delay for 0.5 seconds before looking for new traffic and weather data.
     time.sleep(0.5)
