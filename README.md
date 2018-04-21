@@ -15,7 +15,8 @@ The following python libraries are required and will need to be installed (pip i
  * Tkinter
  * ImageTk
  * Pillow (PIL, Python Imaging Library)
-
+     * If you are using windows, another user found that the Pillow package at [this link](https://www.lfd.uci.edu/%7Egohlke/pythonlibs/) solved errors with the program.
+ 
 The following python libraries are required, but most likely already installed.
 
  * os
