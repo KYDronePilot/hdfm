@@ -74,17 +74,22 @@ class AreaMap:
             int(x2),
             int(y2)
         ))
-        # Resize to 900x900 and save.
+        # Resize to 900x900, convert to right format, and save.
         self.map = cropped.resize((900, 900))
+        self.map = self.map.convert('RGBA')
         self.map.save(MAPS_DIR + self.area_id + '.png')
 
     # Get an area map for the predefined area.
     def get_map(self):
+        # If already in memory, just return it.
+        if self.map is not None:
+            return self.map
         # Check if an area map has already been rendered.
         file = Path(MAPS_DIR + self.area_id + '.png')
         if file.is_file():
             # Open and return image.
-            return Image.open(file.absolute())
+            self.map = Image.open(file.absolute()).convert('RGBA')
+            return self.map
         else:
             # Else, render it and return.
             self.render()
