@@ -6,28 +6,27 @@ from queue import Queue
 from glob import glob
 import os
 import os.path
-from core.us_map import AreaMap
+from src.us_map import AreaMap
 from datetime import datetime
-
-# TODO: change.
-DUMP_DIR = 'testing/dump/'
-FONT = 'font/GlacialIndifference-Regular.otf'
-RADAR_DIR = 'saves/'
+from src.us_map import AreaMap
+from . import DUMP, FONT, SAVES
 
 
 # For managing received radar overlays.
 class RadarMap:
-    us_map: AreaMap
+    area_map: AreaMap
 
-    def __init__(self, us_map, do_save=False):
+    def __init__(self, area_map, do_save=False, save_dir=SAVES):
         # File name of current overlay.
         self.filename = ''
         self.overlay = None
-        self.us_map = us_map
+        self.area_map = area_map
         # Map with overlay.
-        self.radar = None
+        self.img = None
         # Whether radar images should be saved.
         self.do_save = do_save
+        # Save directory.
+        self.save_dir = save_dir
 
     # Get a timestamp for right now.
     @staticmethod
@@ -38,13 +37,13 @@ class RadarMap:
     def stamp(self):
         # Write timestamp in bottom right corner.
         font = ImageFont.truetype(FONT, 25)
-        draw = ImageDraw.Draw(self.radar)
+        draw = ImageDraw.Draw(self.img)
         draw.text((550, 835), self.timestamp(), font=font, fill='black')
 
     # Save radar image.
     def save(self):
         name = 'radar_{0}.png'.format(self.timestamp())
-        self.radar.save(RADAR_DIR + name)
+        self.img.save(self.save_dir + name)
 
     # Update the current map overlay.
     def update_overlay(self):
@@ -52,18 +51,26 @@ class RadarMap:
 
         :return: True if updated, False if not
         """
+        # If no config has been received, try to get one.
+        if not self.area_map.has_config():
+            rc = self.area_map.get_config()
+            # If still no config, wait till later.
+            if not rc:
+                return False
         # Get any overlays new overlays.
-        files = glob(os.path.abspath(DUMP_DIR) + '/DWRO_*')
+        files = glob(os.path.abspath(DUMP) + '/DWRO_*')
         new_files = [x for x in files if os.path.basename(x) != self.filename]
-        # If there are none, exit.
+        # If there are none, delete old ones and exit.
         if not new_files:
+            for file in files:
+                os.remove(file)
             return False
         # Update using the first new overlay.
         self.overlay = Image.open(new_files[0]).convert('RGBA')
         self.overlay = self.overlay.resize((900, 900))
         # Combine map and overlay.
-        self.radar = Image.alpha_composite(
-            self.us_map.get_map(),
+        self.img = Image.alpha_composite(
+            self.area_map.get_map(),
             self.overlay
         )
         # Timestamp the radar.
@@ -72,8 +79,15 @@ class RadarMap:
         self.filename = os.path.basename(new_files[0])
         # Save file if necessary.
         if self.do_save:
-            self.save()
+            self.save_dir()
         # Delete all overlays.
         for file in files:
             os.remove(file)
         return True
+
+
+if __name__ == '__main__':
+    area_map = AreaMap()
+    radar = RadarMap(area_map)
+    radar.update_overlay()
+    pass

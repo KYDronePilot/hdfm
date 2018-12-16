@@ -8,11 +8,7 @@ import os
 import re
 import math
 from pathlib import Path
-
-# TODO: change source of var.
-DUMP_DIR = 'testing/dump/'
-MAP_FILE = 'USMap.png'
-MAPS_DIR = 'maps/'
+from . import DUMP, MAP_FILE, MAPS
 
 
 # Obtains area maps in the US to overlay radar images on.
@@ -40,7 +36,7 @@ class AreaMap:
         :return: True if successful, False if not
         """
         # Look for any radar map config files.
-        files = glob(os.path.abspath(DUMP_DIR) + '/DWRI_*')
+        files = glob(os.path.abspath(DUMP) + '/DWRI_*')
         if not files:
             return False
         # Extract info from first file.
@@ -52,6 +48,10 @@ class AreaMap:
                 coords = re.findall(r"[-+]?\d*\.\d+|\d+", line)
                 self.lat1, self.lon1, self.lat2, self.lon2 = (float(x) for x in coords)
         return True
+
+    # Checks if a config file has been received.
+    def has_config(self):
+        return self.area_id is not None
 
     # Render an area map from the US map.
     def render(self):
@@ -77,7 +77,7 @@ class AreaMap:
         # Resize to 900x900, convert to right format, and save.
         self.map = cropped.resize((900, 900))
         self.map = self.map.convert('RGBA')
-        self.map.save(MAPS_DIR + self.area_id + '.png')
+        self.map.save(MAPS + self.area_id + '.png')
 
     # Get an area map for the predefined area.
     def get_map(self):
@@ -85,7 +85,7 @@ class AreaMap:
         if self.map is not None:
             return self.map
         # Check if an area map has already been rendered.
-        file = Path(MAPS_DIR + self.area_id + '.png')
+        file = Path(MAPS + self.area_id + '.png')
         if file.is_file():
             # Open and return image.
             self.map = Image.open(file.absolute()).convert('RGBA')

@@ -1,17 +1,12 @@
-from threading import Thread
 import tkinter
-from PIL import Image, ImageTk, ImageFont, ImageDraw
-import time
 from queue import Queue
 
-# Font location.
-# TODO: may be unnecessary.
-FONT = 'font/GlacialIndifference-Regular.otf'
+from PIL import Image, ImageTk
 
 
 # Generic image display window.
-class RootDisplay(Thread):
-    def __init__(self, title, dim=(900, 900)):
+class GenericDisplay(tkinter.Toplevel):
+    def __init__(self, title, dim):
         """
 
         :param title: title of the window
@@ -23,24 +18,20 @@ class RootDisplay(Thread):
         self.image_cpy = None
         self.p_image = None
         # Init image to a blank image.
-        self.set_image(self.blank_image(dim))
+        new_img = self.blank_image(dim)
+        self.image = new_img
+        self.set_image(new_img)
         # Set up display.
-        self.disp = self.init_window()
-        self.disp.title(title)
+        self.title(title)
         # Set up image display panel.
-        self.panel = tkinter.Label(self.disp)
+        self.panel = tkinter.Label(self)
         self.panel.pack(fill=tkinter.BOTH, expand=tkinter.YES)
         self.update_image()
         self.panel.bind('<Configure>', self.resize_image)
         # A callback function to check for and make updates.
-        self.disp.after('1000', self.update)
+        self.after('2000', self.update_window)
         # A queue for receiving update information.
         self.updates = Queue(maxsize=10)
-
-    # Defines the Tkinter window type (can be overrided).
-    @staticmethod
-    def init_window():
-        return tkinter.Tk()
 
     # Create blank Tkinter PhotoImage.
     @staticmethod
@@ -54,7 +45,7 @@ class RootDisplay(Thread):
         return Image.new('RGBA', dim)
 
     # Callback function to apply any display updates.
-    def update(self):
+    def update_window(self):
         raise NotImplementedError('This function should be subclassed.')
 
     # Update the image currently on the display.
@@ -63,7 +54,7 @@ class RootDisplay(Thread):
         self.panel.configure(image=self.p_image)
         # Set aspect ratio.
         width, height = self.image_cpy.size
-        self.disp.aspect(width, height, width, height)
+        self.aspect(width, height, width, height)
 
     # Resize an image upon window size change.
     def resize_image(self, event):
@@ -86,7 +77,6 @@ class RootDisplay(Thread):
         self.image = self.image_cpy.resize((new_w, new_h))
         # Display new image.
         self.update_image()
-        # TODO only resize based on dimension constraints.
 
     # Set an image to the display
     def set_image(self, image):
@@ -96,17 +86,56 @@ class RootDisplay(Thread):
         :type image: Image.Image
         :return:
         """
+        # Get dimensions of current image.
+        width, height = self.image.size
+        # Update images.
         self.image = image
         self.image_cpy = image.copy()
-
-    # Main loop.
-    def run(self):
-        self.disp.mainloop()
+        # Resize new main image to the old dimensions.
+        self.image = self.image_cpy.resize((width, height))
 
 
-if __name__ == '__main__':
-    root = RootDisplay('Test')
-    img = Image.open('Weather Map 10-28-2017 09-29-42 PM.png').convert('RGBA')
-    root.set_image(img)
-    root.update_image()
-    root.run()
+# Subclass for the weather display.
+class RadarDisplay(GenericDisplay):
+    def __init__(self, radar, dim=(900, 900)):
+        super().__init__('HDFM - Radar Map', dim)
+        # Radar management object.
+        self.radar = radar
+
+    # For updating the image on the radar display.
+    def update_window(self):
+        # Try to update the radar image.
+        rc = self.radar.update_overlay()
+        # If updated, update the display's image.
+        if rc:
+            self.set_image(self.radar.img)
+            self.update_image()
+        # Re-register updater hook.
+        self.after('2000', self.update_window)
+
+
+# Subclass for traffic display.
+class TrafficDisplay(GenericDisplay):
+    def __init__(self, traffic, dim=(600, 600)):
+        super().__init__('HDFM - Traffic Display', dim)
+        # Traffic management object.
+        self.traffic = traffic
+
+    # Update traffic tiles on display.
+    def update_window(self):
+        # Try to update any new tiles.
+        rc = self.traffic.update_tiles()
+        # If updated, update display's image.
+        if rc:
+            self.set_image(self.traffic.map)
+            self.update_image()
+        # Re-register updater hook.
+        self.after('2000', self.update_window)
+
+# if __name__ == '__main__':
+#     root = GenericDisplay('Test')
+#     img = Image.open('../saves/radar_12-14-2018 08-08-38 PM.png').convert('RGBA')
+#     root.set_image(img)
+#     root.update_image()
+#     root.mainloop()
+#     print('test')

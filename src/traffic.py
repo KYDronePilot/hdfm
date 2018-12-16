@@ -6,14 +6,10 @@ from queue import Queue
 from glob import glob
 import os
 import os.path
-from core.us_map import AreaMap
+from src.us_map import AreaMap
 from datetime import datetime
 import re
-
-# TODO: change.
-DUMP_DIR = 'testing/dump/'
-FONT = 'font/GlacialIndifference-Regular.otf'
-SAVES = 'saves/'
+from . import DUMP, SAVES
 
 
 # For processing traffic tiles.
@@ -46,13 +42,15 @@ class TrafficTile:
 
 # For processing traffic images.
 class Traffic:
-    def __init__(self, do_save=False):
+    def __init__(self, do_save=False, save_dir=SAVES):
         # The complete traffic map.
-        self.map = Image.new("RGBA", (600, 600))
+        self.map = Image.new('RGBA', (600, 600))
         # Keeps track of when all tiles are updated.
         self.tiles = [False] * 9
         # Whether or not maps should be saved.
         self.do_save = do_save
+        # Save directory.
+        self.save_dir = save_dir
 
     # Get a timestamp for right now.
     @staticmethod
@@ -62,7 +60,7 @@ class Traffic:
     # Save the map.
     def save(self):
         name = 'traffic_{0}.png'.format(self.timestamp())
-        self.map.save(SAVES + name)
+        self.map.save(self.save_dir + name)
         # Reset update-tracking tiles.
         self.tiles = [False] * 9
 
@@ -75,13 +73,17 @@ class Traffic:
         os.remove(tile.filename)
 
     # Load and paste any new tiles on the map.
-    def load(self):
+    def update_tiles(self):
         # Get traffic tiles.
-        files = glob(os.path.abspath(DUMP_DIR) + '/TMT_*')
+        files = glob(os.path.abspath(DUMP) + '/TMT_*')
         tiles = [TrafficTile(x) for x in files]
+        # If no new tiles, nothing to be updated.
+        if not tiles:
+            return False
         # Paste tiles on the map.
         for tile in tiles:
             self.paste(tile)
         # Save if specified and all tiles are updated.
         if self.do_save and False not in self.tiles:
             self.save()
+        return True
