@@ -1,8 +1,0 @@
-DopplerWeatherRadarProtocolVersionID="1.0"
-DWR_Area_ID="03g65g"
-StationList="(pIESMA,FM98.1)";"(pIEKbg,FM100.1)";"(pIEKcA,FM94.5)";"(pIBzhw,FM104.5)"
-Coordinates="(40.08729,-86.70460)";"(35.84005,-81.31471)"
-Legend_Rain="(1,(0,255,0))";"(2,(0,170,0))";"(3,(0,102,0))";"(4,(255,238,0))";"(5,(238,119,0))";"(6,(221,0,0))"
-Legend_MixIce="(1,(255,170,255))";"(2,(244,85,176))"
-Legend_Snow="(1,(0,255,255))";"(2,(0,0,255))"
-CopyrightNotice="Copyright © 2018 iHeartMedia, Inc. All rights reserved."
