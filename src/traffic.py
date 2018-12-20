@@ -1,14 +1,11 @@
-from threading import Thread
-import tkinter
-from PIL import Image, ImageTk, ImageFont, ImageDraw
-import time
-from queue import Queue
-from glob import glob
 import os
 import os.path
-from src.us_map import AreaMap
-from datetime import datetime
 import re
+from datetime import datetime
+from glob import glob
+
+from PIL import Image
+
 from . import DUMP, SAVES
 
 

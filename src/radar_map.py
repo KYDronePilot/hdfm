@@ -1,13 +1,10 @@
-from threading import Thread
-import tkinter
-from PIL import Image, ImageTk, ImageFont, ImageDraw
-import time
-from queue import Queue
-from glob import glob
 import os
 import os.path
-from src.us_map import AreaMap
 from datetime import datetime
+from glob import glob
+
+from PIL import Image, ImageFont, ImageDraw
+
 from src.us_map import AreaMap
 from . import DUMP, FONT, SAVES
 
@@ -79,15 +76,8 @@ class RadarMap:
         self.filename = os.path.basename(new_files[0])
         # Save file if necessary.
         if self.do_save:
-            self.save_dir()
+            self.save()
         # Delete all overlays.
         for file in files:
             os.remove(file)
         return True
-
-
-if __name__ == '__main__':
-    area_map = AreaMap()
-    radar = RadarMap(area_map)
-    radar.update_overlay()
-    pass

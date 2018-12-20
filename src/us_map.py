@@ -1,13 +1,11 @@
-from threading import Thread
-import tkinter
-from PIL import Image, ImageTk, ImageFont, ImageDraw
-import time
-from queue import Queue
-from glob import glob
+import math
 import os
 import re
-import math
+from glob import glob
 from pathlib import Path
+
+from PIL import Image
+
 from . import DUMP, MAP_FILE, MAPS
 
 

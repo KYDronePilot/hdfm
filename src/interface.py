@@ -1,11 +1,8 @@
 import os
 import os.path
-import subprocess
-import sys
-import time
-from multiprocessing import Process
-from . import SAVES, DUMP
 
+from src.gui import NRSC5
+from . import SAVES
 
 # Help message.
 HELP = """\
@@ -19,39 +16,6 @@ Option        Meaning
  -l <1-3>      Log level output from nrsc5 (default = 3, only debug info)
  -a <null>     Display album/station art
 """
-
-
-# NRSC5 management.
-class NRSC5(Process):
-    def __init__(self):
-        super().__init__()
-        # NRSC5 arguments.
-        self.channel = 0
-        self.ppm = 0
-        self.log = 3
-        self.freq = None
-        self.dump_dir = DUMP
-        # Command/arg list.
-        self.cmd_args = None
-
-    # Format command/argument list.
-    def format_cmd(self):
-        self.cmd_args = [
-            'nrsc5',
-            '-l',
-            str(self.log),
-            '-p',
-            str(self.ppm),
-            '--dump-aas-files',
-            self.dump_dir,
-            str(self.freq),
-            str(self.channel)
-        ]
-
-    # Format command and run.
-    def run(self):
-        self.format_cmd()
-        subprocess.call(self.cmd_args)
 
 
 # User interface management (CLI).
@@ -157,7 +121,7 @@ class UserInterface:
         if not os.path.isdir(arg):
             print('Error: Invalid directory')
             return False
-        self.save_dir = arg
+        self.save_dir = os.path.abspath(arg) + '/'
         self.do_save = True
         return True
 
@@ -192,28 +156,3 @@ class UserInterface:
                 if not rc:
                     return self.HALT
         return self.SUCCESS
-
-
-if __name__ == '__main__':
-    nrsc5 = NRSC5()
-    ui = UserInterface(nrsc5)
-    ui.process(sys.argv)
-
-    nrsc5_args = 'NRSC5: {0}, {1}, {2}, {3}; {4}'.format(
-        nrsc5.channel,
-        nrsc5.ppm,
-        nrsc5.log,
-        nrsc5.freq,
-        nrsc5.cmd_args
-    )
-    ui_args = 'UI: {0}, {1}, {2}'.format(
-        ui.art,
-        ui.save_dir,
-        ui.do_save
-    )
-    print(nrsc5_args)
-    print(ui_args)
-
-    nrsc5.format_cmd()
-    nrsc5.start()
-    time.sleep(100)
