@@ -11,8 +11,6 @@ from . import DUMP, FONT, SAVES
 
 # For managing received radar overlays.
 class RadarMap:
-    area_map: AreaMap
-
     def __init__(self, area_map, do_save=False, save_dir=SAVES):
         # File name of current overlay.
         self.filename = ''

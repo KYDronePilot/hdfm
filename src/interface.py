@@ -20,7 +20,6 @@ Option        Meaning
 
 # User interface management (CLI).
 class UserInterface:
-    nrsc5: NRSC5
     # Halt program status code.
     HALT = 1
     # Success code.

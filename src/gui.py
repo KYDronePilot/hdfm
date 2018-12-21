@@ -1,7 +1,6 @@
 import multiprocessing
 import subprocess
 import tkinter
-from queue import Queue
 
 from PIL import Image, ImageTk
 
@@ -32,11 +31,19 @@ class GenericDisplay(tkinter.Toplevel, tkinter.Tk):
         self.panel = tkinter.Label(self)
         self.panel.pack(fill=tkinter.BOTH, expand=tkinter.YES)
         self.update_image()
-        self.panel.bind('<Configure>', self.resize_image)
-        # A callback function to check for and make updates.
-        self.after('2000', self.update_window)
         # Register window delete event handler.
         self.protocol('WM_DELETE_WINDOW', delete_eh)
+        # Difference in window and image dims.
+        self.diff_dim_w = None
+        self.diff_dim_h = None
+        self.update()
+        self.get_diff_dim()
+        # Resize event handler.
+        self.panel.bind('<Configure>', self.resize_image)
+        # Resize if window is too big for the screen.
+        self.screen_resize()
+        # A callback function to check for and make updates.
+        self.after('2000', self.update_window)
 
     # Determines what tkinter display is inherited.
     def init(self):
@@ -65,12 +72,40 @@ class GenericDisplay(tkinter.Toplevel, tkinter.Tk):
         width, height = self.image_cpy.size
         self.aspect(width, height, width, height)
 
+    # Get difference in window and image dims.
+    def get_diff_dim(self):
+        width, height = self.image_cpy.size
+        self.diff_dim_w = self.winfo_reqwidth() - width
+        self.diff_dim_h = self.winfo_reqheight() - height
+        print(self.diff_dim_w, self.diff_dim_h)
+
+    # Resize window to fit in screen.
+    def screen_resize(self):
+        # Get dims.
+        screen_w = self.winfo_screenwidth()
+        screen_h = self.winfo_screenheight()
+        img_w, img_h = self.image_cpy.size
+        # If display is smaller than screen, no resizing.
+        if img_w < screen_w and img_h < screen_h:
+            return
+        # Get smallest.
+        smallest = min(screen_w, screen_h)
+        # Resize largest dimension to fit in screen
+        if img_h > img_w:
+            new_h = smallest - self.diff_dim_h
+            new_w = (img_w // img_h) * new_h
+        else:
+            new_w = smallest - self.diff_dim_w
+            new_h = (img_h // img_w) * new_w
+        self.image = self.image_cpy.resize((new_w, new_h))
+        self.update_image()
+
     # Resize an image upon window size change.
     def resize_image(self, event):
         # Ensure the image dimensions are constrained so the image is not distorted.
         old_w, old_h = self.image_cpy.size
-        new_w = event.width - 4
-        new_h = event.height - 4
+        new_w = event.width - self.diff_dim_w
+        new_h = event.height - self.diff_dim_h
         # If dimensions match, nothing needs to be resized.
         if old_w == new_w and old_h == new_h:
             return
@@ -210,8 +245,6 @@ class InfoFrame(tkinter.Frame):
 
 # Non-blocking stream reader.
 class NBSR(multiprocessing.Process):
-    q: Queue
-
     def __init__(self, proc):
         multiprocessing.Process.__init__(self)
         # Queue for lines.
