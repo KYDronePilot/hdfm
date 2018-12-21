@@ -1,7 +1,6 @@
 import os
 import os.path
 
-from src.gui import NRSC5
 from . import SAVES
 
 # Help message.
@@ -13,7 +12,7 @@ Option        Meaning
  -c <program>  HD Radio program, for stations with subchannels (default = 0)
  -p <ppm>      PPM error correction (default = 0)
  -s <dir>      Directory to do_save weather and traffic images to (default = none)
- -l <1-3>      Log level output from nrsc5 (default = 3, only debug info)
+ -l <null>     Show logging information
  -a <null>     Display album/station art
 """
 
@@ -101,17 +100,10 @@ class UserInterface:
         self.nrsc5.ppm = int(arg)
         return True
 
-    # Handle log level arg.
+    # Set whether or not logging should be displayed.
     def log(self, arg):
-        # Validate input.
-        if not UserInterface.repr_int(arg):
-            print('Error: Invalid log level (1 - 3)')
-            return False
-        level = int(arg)
-        if level < 1 or level > 3:
-            print('Error: Invalid log level (1 - 3)')
-            return False
-        self.nrsc5.log = level
+        # Handle the arg.
+        self.nrsc5.logging = True
         return True
 
     # Set save directory.

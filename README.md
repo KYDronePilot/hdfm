@@ -47,7 +47,7 @@ An RTL-SDR dongle which can be found [here](http://a.co/d/1qduCLG).
      -c <program>        HD Radio program, for stations with subchannels (default = 0)
      -p <ppm>            PPM error correction (default = 0)
      -s <dir>            Directory to save weather and traffic images to (default = none)
-     -l <1-3>            Log level output from nrsc5 (default = 3, only debug info)
+     -l <null>           Show logging information
 	 -a <null>           Display album/station art
 ### Examples:
 

@@ -77,7 +77,6 @@ class GenericDisplay(tkinter.Toplevel, tkinter.Tk):
         width, height = self.image_cpy.size
         self.diff_dim_w = self.winfo_reqwidth() - width
         self.diff_dim_h = self.winfo_reqheight() - height
-        print(self.diff_dim_w, self.diff_dim_h)
 
     # Resize window to fit in screen.
     def screen_resize(self):
@@ -278,9 +277,10 @@ class NRSC5(tkinter.Tk):
         # NRSC5 arguments.
         self.channel = 0
         self.ppm = 0
-        self.log = 3
         self.freq = None
         self.dump_dir = DUMP
+        # Whether logging should be displayed.
+        self.logging = False
         # Command/arg list.
         self.cmd_args = None
         # The command object.
@@ -305,7 +305,7 @@ class NRSC5(tkinter.Tk):
         self.cmd_args = [
             'nrsc5',
             '-l',
-            str(self.log),
+            '1',
             '-p',
             str(self.ppm),
             '--dump-aas-files',
@@ -364,6 +364,9 @@ class NRSC5(tkinter.Tk):
         while not self.nbsr.q.empty():
             line = self.nbsr.q.get()
             line = line.decode()
+            # If logging enabled, print line.
+            if self.logging:
+                print(line, end='')
             # Process line.
             self.process_line(line)
         # Re-register updater hook.
