@@ -25,12 +25,12 @@ class Artwork:
     # Save artwork.
     def save(self):
         name = 'artwork_{0}.png'.format(self.timestamp())
-        self.img.save(self.save_dir + name)
+        self.img.save(os.path.join(self.save_dir, name))
 
     # Delete artwork files.
     @staticmethod
     def delete_artwork():
-        files = glob(DUMP + '*')
+        files = glob(os.path.join(DUMP, '*'))
         art_files = [x for x in files if x.endswith('.jpg')]
         for art_file in art_files:
             os.remove(art_file)
@@ -38,7 +38,7 @@ class Artwork:
     # Update artwork.
     def update(self):
         # Get any artwork files.
-        files = glob(DUMP + '*')
+        files = glob(os.path.join(DUMP, '*'))
         art_files = [x for x in files if x.endswith('.jpg')]
         # If no new art, exit.
         if not art_files:

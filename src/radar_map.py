@@ -40,7 +40,7 @@ class RadarMap:
     # Save radar image.
     def save(self):
         name = 'radar_{0}.png'.format(self.timestamp())
-        self.img.save(self.save_dir + name)
+        self.img.save(os.path.join(self.save_dir, name))
 
     # Update the current map overlay.
     def update_overlay(self):
@@ -55,7 +55,7 @@ class RadarMap:
             if not rc:
                 return False
         # Get any overlays new overlays.
-        files = glob(os.path.abspath(DUMP) + '/DWRO_*')
+        files = glob(os.path.join(DUMP, 'DWRO_*'))
         new_files = [x for x in files if os.path.basename(x) != self.filename]
         # If there are none, delete old ones and exit.
         if not new_files:

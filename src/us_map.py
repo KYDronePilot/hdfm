@@ -34,7 +34,7 @@ class AreaMap:
         :return: True if successful, False if not
         """
         # Look for any radar map config files.
-        files = glob(os.path.abspath(DUMP) + '/DWRI_*')
+        files = glob(os.path.join(DUMP, 'DWRI_*'))
         if not files:
             return False
         # Extract info from first file.
@@ -75,7 +75,8 @@ class AreaMap:
         # Resize to 900x900, convert to right format, and save.
         self.map = cropped.resize((900, 900))
         self.map = self.map.convert('RGBA')
-        self.map.save(MAPS + self.area_id + '.png')
+        name = '{0}.png'.format(self.area_id)
+        self.map.save(os.path.join(MAPS, name))
 
     # Get an area map for the predefined area.
     def get_map(self):
@@ -83,7 +84,8 @@ class AreaMap:
         if self.map is not None:
             return self.map
         # Check if an area map has already been rendered.
-        file = Path(MAPS + self.area_id + '.png')
+        name = '{0}.png'.format(self.area_id)
+        file = Path(os.path.join(MAPS, name))
         if file.is_file():
             # Open and return image.
             self.map = Image.open(file.absolute()).convert('RGBA')

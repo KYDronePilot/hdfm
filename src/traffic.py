@@ -57,7 +57,7 @@ class Traffic:
     # Save the map.
     def save(self):
         name = 'traffic_{0}.png'.format(self.timestamp())
-        self.map.save(self.save_dir + name)
+        self.map.save(os.path.join(self.save_dir, name))
         # Reset update-tracking tiles.
         self.tiles = [False] * 9
 
@@ -72,7 +72,7 @@ class Traffic:
     # Load and paste any new tiles on the map.
     def update_tiles(self):
         # Get traffic tiles.
-        files = glob(os.path.abspath(DUMP) + '/TMT_*')
+        files = glob(os.path.join(DUMP, 'TMT_*'))
         tiles = [TrafficTile(x) for x in files]
         # If no new tiles, nothing to be updated.
         if not tiles:

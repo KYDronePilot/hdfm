@@ -121,7 +121,7 @@ class UserInterface:
         if not os.path.isdir(arg):
             print('Error: Invalid directory')
             return False
-        self.save_dir = os.path.abspath(arg) + '/'
+        self.save_dir = os.path.join(os.path.abspath(arg), '/')
         self.do_save = True
         return True
 
@@ -148,6 +148,10 @@ class UserInterface:
         # Process all args other.
         length = len(args)
         for i in range(length):
+            # Handle empty flag.
+            if args[i] == '-':
+                print('Error: empty flag "-"')
+                return self.HALT
             if args[i][0] != '-':
                 continue
             # Do not process a flag at the end (should be frequency).
