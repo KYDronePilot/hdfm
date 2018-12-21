@@ -56,7 +56,7 @@ class Main:
     # Clean up the dump directory.
     @staticmethod
     def clean_dump():
-        files = glob(DUMP + '*')
+        files = glob(os.path.join(DUMP, '*'))
         old_files = [x for x in files if '.gitignore' not in x]
         for file in old_files:
             os.remove(file)
