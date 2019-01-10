@@ -28,11 +28,12 @@ and I'll do my best to help.
 ### Packages
 
  * Python 3 (preferably 3.6 or higher)
- * nrsc5 (installation instructions available [here](https://github.com/theori-io/nrsc5))
+ * `python3-tk` (Default with some installations; others need it manually installed)
+ * `nrsc5` (installation instructions available [here](https://github.com/theori-io/nrsc5))
 
 ### Libraries
 
- * Pillow (PIL fork, `pip(3) install Pillow`)
+ * `Pillow` (PIL fork, `pip3 install Pillow`)
 
 ### Other Requirements
 
