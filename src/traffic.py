@@ -73,6 +73,8 @@ class Traffic:
     def update_tiles(self):
         # Get traffic tiles.
         files = glob(os.path.join(DUMP, 'TMT_*'))
+        # DEBUG: FIXME.
+        print('Traffic files found: ', files)
         tiles = [TrafficTile(x) for x in files]
         # If no new tiles, nothing to be updated.
         if not tiles:
