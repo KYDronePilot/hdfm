@@ -1,37 +1,43 @@
-**hdfm** displays weather and traffic maps received from iHeartRadio HD radio stations. It relies on nrsc5 to decode and dump the radio station data for it to process and display.
+# HDFM
+Displays live weather, traffic, album artwork, and song/station data received from HD Radio stations
 
-This is my first major python project and I only have about 3 months of experience so forgive me if I made any mistakes. This program is designed for rtl-sdr enthusiasts or possibly people who want to put a navigation system in their vehicle. There are lots of things that need to be improved, namely audio. When run on a mac, the audio seems to work fine, but this will likely be different on a linux os. So far, I've successfully tested it with 2 different iHeartRadio stations, but you may run across some that it won't work with. Keep in mind, this will NOT work anything other than iHeartRadio HD stations. If you have any issues, please post them and I'll get back as soon as possible.
+![alt text](img/traffic_map.png)
+
+Example Traffic Map
+
+![alt text](img/weather_map.png)
+
+Example Weather Map
+
+### Overview
+**hdfm** is a Python script designed to process data broadcasted by iHeartRadio HD Radio stations and display it in 
+real time. This data includes traffic and weather maps, as well as album/station art and station/song details.
+
+This script sources its data from another program [nrsc5](https://github.com/theori-io/nrsc5), which was developed to
+decode HD Radio signals using an inexpensive [RTL-SDR receiver](https://www.rtl-sdr.com). More information can be 
+found on nrsc5 [here](https://theori.io/research/nrsc-5-c). If you haven't heard of an RTL-SDR receiver before or do 
+not own one, I would highly recommend purchasing one. There are many unique projects that can be done with them and 
+they are extremely inexpensive.
+
+Some potential uses of this script include receiving weather and traffic data while off the grid (but near a radio 
+station) or creating a custom car navigation system.
+
+Keep in mind this program will ONLY work with iHeartRadio stations. If you encounter any problems, just open an issue
+and I'll do my best to help.
 
 ### Packages
 
-The only required package other than python is nrsc5, developed by Theori http://www.theori.io
-
- * Installation instructions can be found at https://github.com/theori-io/nrsc5
+ * Python 3 (preferably 3.6 or higher)
+ * `python3-tk` (Default with some installations; others need it manually installed)
+ * `nrsc5` (installation instructions available [here](https://github.com/theori-io/nrsc5))
 
 ### Libraries
 
-The following python libraries are required and will need to be installed (pip install 'library'):
+ * `Pillow` (PIL fork, `pip3 install Pillow`)
 
- * Tkinter
- * ImageTk
- * Pillow (PIL, Python Imaging Library)
-     * If you are using windows, another user found that the Pillow package at [this link](https://www.lfd.uci.edu/%7Egohlke/pythonlibs/) solved errors with the program.
- 
-The following python libraries are required, but most likely already installed.
+### Other Requirements
 
- * os
- * glob
- * re
- * math
- * subprocess
- * threading
- * sys
- * time
- * datetime
-
-## Requirements
-
-An RTL-SDR dongle must be plugged in for this program to function properly.
+An RTL-SDR dongle which can be found [here](http://a.co/d/1qduCLG).
 
 ### Usage:
 
@@ -39,40 +45,33 @@ An RTL-SDR dongle must be plugged in for this program to function properly.
 	
      Option              Meaning
      -h, --help          Show this message
-     -c <channel>        HDFM channel, for stations with subchannels (default = 0)
+     -c <program>        HD Radio program, for stations with subchannels (default = 0)
      -p <ppm>            PPM error correction (default = 0)
      -s <dir>            Directory to save weather and traffic images to (default = none)
-     -l <1-3>            Log level output from nrsc5 (default = 3, only debug info)
+     -l <null>           Show logging information
 	 -a <null>           Display album/station art
 ### Examples:
 
 Tune to 104.5 MHz:
 
-     $ python ./hdfm.py 104.5
+     $ ./hdfm.py 104.5
 
-Tune to 104.5 MHz, display album/station artwork, and save all received maps to ./Received Maps/:
+Tune to 104.5 MHz, display album/station artwork, and save all received maps to `saves/`:
 
-     $ python ./hdfm.py -a -s ./Recieved\ Maps/ 104.5
+     $ ./hdfm.py -a -s saves 104.5
 
-Tune to 104.5 MHz, set the ppm correction to 48, and decode HD channel 2 (HD2)
+Tune to 104.5 MHz, set the ppm correction to 48, and decode HD program 2 (HD2)
 
-     $ python ./hdfm.py -p 48 -c 1 104.5
+     $ ./hdfm.py -p 48 -c 1 104.5
 
 ### Compatible Stations
 
-A list of nearby HD Radio stations can be found by entering you zip code at this website:
+A list of nearby HD Radio stations can be found by entering your zip code at this website:
 https://hdradio.com/stations
 
-A list of all iHeartRadio run stations in the US can be found here:
+A list of all compatible iHeartRadio stations in the US can be found here:
 https://en.wikipedia.org/wiki/List_of_radio_stations_owned_by_iHeartMedia
 
-The station must be HD and run by iHeartRadio for this program to function properly.
+The station must be HD and operated by iHeartRadio for this program to function properly.
 
-### Received Images
-![alt text](https://image.ibb.co/kOnwqR/Traffic_Map_10_28_2017_09_41_13_PM.png)
-
-Traffic Map 10-28-2017 09-41-13 PM.png
-
-![alt text](https://preview.ibb.co/d4jLH6/Weather_Map_10_28_2017_10_38_08_PM.png)
-
-Weather Map 10-28-2017 10-38-08 PM.png
+![alt text](img/screen_shot.png)
