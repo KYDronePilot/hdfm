@@ -2,6 +2,10 @@
 /Dump/
 # Virtual envs
 /venv
+# Ignore idea altogether
+/.idea
+# Ignore nrsc5 samples
+/samples
 
 # Created by https://www.gitignore.io/api/macos,python,pycharm,windows
 # Edit at https://www.gitignore.io/?templates=macos,python,pycharm,windows
