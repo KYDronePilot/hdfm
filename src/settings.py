@@ -115,10 +115,22 @@ class SettingsWindow(tkinter.Tk):
         _title: Title of window.
         width: Width of window
         height: Height of window
+        nrsc5_path: Variable for path to NRSC5 executable
+        program: Variable for HD Radio program
+        ppm: Variable for PPM error correction
+        save_dir: Variable for directory to save weather and traffic images to
+        logging: Variable for whether to show logging information
+        art: Variable for whether to display album/station art
     """
     _title: str
     width: int
     height: int
+    nrsc5_path: tkinter.StringVar
+    program: tkinter.StringVar
+    ppm: tkinter.StringVar
+    save_dir: tkinter.StringVar
+    logging: tkinter.BooleanVar
+    art: tkinter.BooleanVar
 
     def __init__(self, title: str, width: int, height: int):
         super().__init__()
@@ -133,6 +145,42 @@ class SettingsWindow(tkinter.Tk):
         self.width = width
         self.height = height
         self.geometry(f'{self.width}x{self.height}')
+        self.setup_components()
+
+    def setup_components(self):
+        """
+        Setup the UI components.
+        """
+        nrsc5_input_group = InputGroup(self, 'NRSC-5 Executable Path')
+        nrsc5_input = NRSC5PathInput(nrsc5_input_group)
+        nrsc5_input_group.pack(nrsc5_input)
+        self.nrsc5_path = nrsc5_input.value
+
+        program_input_group = InputGroup(self, 'HD Radio program, for stations with subchannels')
+        program_input = ProgramInput(program_input_group)
+        program_input_group.pack(program_input)
+        self.program = program_input.value
+
+        ppm_input_group = InputGroup(self, 'PPM error correction')
+        ppm_input = PPMInput(ppm_input_group)
+        ppm_input_group.pack(ppm_input)
+        self.ppm = ppm_input.value
+
+        save_dir_input_group = InputGroup(
+            self,
+            'Directory to save weather and traffic images to (leave blank to not save)'
+        )
+        save_dir_input = SaveDirInput(save_dir_input_group)
+        save_dir_input_group.pack(save_dir_input)
+        self.save_dir = save_dir_input.value
+
+        logging_checkbox = CheckboxInput(self, label='Show logging information')
+        logging_checkbox.pack(anchor='w')
+        self.logging = logging_checkbox.is_checked
+
+        art_checkbox = CheckboxInput(self, label='Display album/station art')
+        art_checkbox.pack(anchor='w')
+        self.art = art_checkbox.is_checked
 
     @property
     def window_title(self) -> str:
@@ -145,6 +193,20 @@ class SettingsWindow(tkinter.Tk):
         """
         self._title = value
         super().title(value)
+
+
+class CheckboxInput(tkinter.Checkbutton):
+    """
+    Checkbox input.
+
+    Attributes:
+        is_checked: Whether the button is checked
+    """
+    is_checked: tkinter.BooleanVar
+
+    def __init__(self, root: SettingsWindow, label: str, default: bool = False):
+        self.is_checked = tkinter.BooleanVar(value=default)
+        super().__init__(root, text=label, variable=self.is_checked, onvalue=True, offvalue=False, bg='black', pady=5)
 
 
 class NRSC5PathInput(TextInput):
@@ -243,24 +305,5 @@ class SaveDirInput(TextInput):
 
 if __name__ == '__main__':
     settings = SettingsWindow('Test Title', 400, 200)
-
-    nrsc5_input_group = InputGroup(settings, 'NRSC-5 Executable Path')
-    nrsc5_input = NRSC5PathInput(nrsc5_input_group)
-    nrsc5_input_group.pack(nrsc5_input)
-
-    program_input_group = InputGroup(settings, 'HD Radio program, for stations with subchannels')
-    program_input = ProgramInput(program_input_group)
-    program_input_group.pack(program_input)
-
-    ppm_input_group = InputGroup(settings, 'PPM error correction')
-    ppm_input = PPMInput(ppm_input_group)
-    ppm_input_group.pack(ppm_input)
-
-    save_dir_input_group = InputGroup(
-        settings,
-        'Directory to save weather and traffic images to (leave blank to not save)'
-    )
-    save_dir_input = SaveDirInput(save_dir_input_group)
-    save_dir_input_group.pack(save_dir_input)
 
     settings.mainloop()
