@@ -72,7 +72,7 @@ class Traffic:
     # Load and paste any new tiles on the map.
     def update_tiles(self):
         # Get traffic tiles.
-        files = glob(os.path.join(DUMP, 'TMT_*'))
+        files = glob(os.path.join(DUMP, '*TMT*'))
         tiles = [TrafficTile(x) for x in files]
         # If no new tiles, nothing to be updated.
         if not tiles:

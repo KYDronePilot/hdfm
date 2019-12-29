@@ -53,7 +53,7 @@ class RadarMap:
             if not rc:
                 return False
         # Get any overlays new overlays.
-        files = glob(os.path.join(DUMP, 'DWRO_*'))
+        files = glob(os.path.join(DUMP, '*DWRO*'))
         new_files = [x for x in files if os.path.basename(x) != self.filename]
         # If there are none, delete old ones and exit.
         if not new_files:

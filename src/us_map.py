@@ -34,7 +34,7 @@ class AreaMap:
         :return: True if successful, False if not
         """
         # Look for any radar map config files.
-        files = glob(os.path.join(DUMP, 'DWRI_*'))
+        files = glob(os.path.join(DUMP, '*DWRI*'))
         if not files:
             return False
         # Extract info from first file.
