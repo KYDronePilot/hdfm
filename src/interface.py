@@ -11,7 +11,7 @@ Option        Meaning
  -h, --help    Show this message
  -c <program>  HD Radio program, for stations with subchannels (default = 0)
  -p <ppm>      PPM error correction (default = 0)
- -s <dir>      Directory to do_save weather and traffic images to (default = none)
+ -s <dir>      Directory to save weather and traffic images to (default = none)
  -l <null>     Show logging information
  -a <null>     Display album/station art
 """

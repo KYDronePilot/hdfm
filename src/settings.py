@@ -1,7 +1,8 @@
-import tkinter
-from typing import Any, Callable, List, Dict
-from cerberus import Validator
 import os
+import tkinter
+from typing import Any, Callable, Dict
+
+from cerberus import Validator
 
 
 def validate(value: Any, constraints: Dict[str, str]) -> bool:
@@ -32,7 +33,8 @@ class TextInput(tkinter.Entry):
     feedback_var: tkinter.StringVar
     validator: Callable
 
-    def __init__(self, root: 'InputGroup', validator: Callable, feedback_var: tkinter.StringVar, default_value: str = ''):
+    def __init__(self, root: 'InputGroup', validator: Callable, feedback_var: tkinter.StringVar,
+                 default_value: str = ''):
         # Configure callback for input value changes
         self.value = tkinter.StringVar(value=default_value)
         self.value.trace('w', lambda name, i, mode, sv=self.value: self.on_change(sv))
@@ -145,24 +147,43 @@ class SettingsWindow(tkinter.Tk):
         super().title(value)
 
 
-if __name__ == '__main__':
-    settings = SettingsWindow('Test Title', 400, 200)
+class NRSC5PathInput(TextInput):
+    """
+    NRSC5 executable path input.
+    """
 
-    nrsc5_input = InputGroup(settings, 'NRSC-5 Executable Path:')
+    def __init__(self, input_group: InputGroup):
+        super().__init__(
+            input_group,
+            self.validate,
+            input_group.feedback,
+            default_value='/usr/local/bin/nrsc5'
+        )
 
-    def validate_nrsc5_input(value: str):
+    @staticmethod
+    def validate(value: str):
         if value == '':
             return 'Please enter path to NRSC-5 executable'
         if not os.path.isfile(value):
             return 'Path not valid'
         return ''
 
-    entry = TextInput(nrsc5_input, validate_nrsc5_input, nrsc5_input.feedback, default_value='/usr/local/bin/nrsc5')
-    nrsc5_input.pack(entry)
 
-    program_input = InputGroup(settings, 'HD Radio program, for stations with subchannels')
+class ProgramInput(TextInput):
+    """
+    HD Radio program number.
+    """
 
-    def validate_program_input(value: str):
+    def __init__(self, input_group: InputGroup):
+        super().__init__(
+            input_group,
+            self.validate,
+            input_group.feedback,
+            default_value='0'
+        )
+
+    @staticmethod
+    def validate(value: str):
         if value == '':
             return 'Please enter HD Radio program'
         try:
@@ -173,7 +194,73 @@ if __name__ == '__main__':
             return 'Program must be a number greater than 0'
         return ''
 
-    entry = TextInput(program_input, validate_program_input, program_input.feedback, default_value='0')
-    program_input.pack(entry)
+
+class PPMInput(TextInput):
+    """
+    PPM error correction input.
+    """
+
+    def __init__(self, input_group: InputGroup):
+        super().__init__(
+            input_group,
+            self.validate,
+            input_group.feedback,
+            default_value='0'
+        )
+
+    @staticmethod
+    def validate(value: str):
+        if value == '':
+            return 'Please enter PPM error correction'
+        try:
+            int(value)
+        except ValueError:
+            return 'Value must be an integer'
+        return ''
+
+
+class SaveDirInput(TextInput):
+    """
+    Directory to save weather and traffic images to.
+    """
+
+    def __init__(self, input_group: InputGroup):
+        super().__init__(
+            input_group,
+            self.validate,
+            input_group.feedback,
+            default_value=''
+        )
+
+    @staticmethod
+    def validate(value: str) -> str:
+        if value == '':
+            return ''
+        if not os.path.isdir(value):
+            return 'Not a valid directory'
+        return ''
+
+
+if __name__ == '__main__':
+    settings = SettingsWindow('Test Title', 400, 200)
+
+    nrsc5_input_group = InputGroup(settings, 'NRSC-5 Executable Path')
+    nrsc5_input = NRSC5PathInput(nrsc5_input_group)
+    nrsc5_input_group.pack(nrsc5_input)
+
+    program_input_group = InputGroup(settings, 'HD Radio program, for stations with subchannels')
+    program_input = ProgramInput(program_input_group)
+    program_input_group.pack(program_input)
+
+    ppm_input_group = InputGroup(settings, 'PPM error correction')
+    ppm_input = PPMInput(ppm_input_group)
+    ppm_input_group.pack(ppm_input)
+
+    save_dir_input_group = InputGroup(
+        settings,
+        'Directory to save weather and traffic images to (leave blank to not save)'
+    )
+    save_dir_input = SaveDirInput(save_dir_input_group)
+    save_dir_input_group.pack(save_dir_input)
 
     settings.mainloop()
