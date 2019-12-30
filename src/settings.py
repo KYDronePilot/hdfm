@@ -1,9 +1,17 @@
 import os
 import tkinter
+from glob import glob
 from typing import Any, Callable, Dict
 from tkinter import messagebox
 
 from cerberus import Validator
+
+from src import DUMP
+from src.artwork import Artwork
+from src.gui import NRSC5, RadarDisplay, TrafficDisplay, ArtworkDisplay
+from src.radar_map import RadarMap
+from src.traffic import Traffic
+from src.us_map import AreaMap
 
 
 class Settings:
@@ -228,6 +236,11 @@ class SettingsWindow(tkinter.Tk):
     save_dir: tkinter.StringVar
     logging: tkinter.BooleanVar
     art: tkinter.BooleanVar
+    # Application GUI windows
+    radar_window: RadarDisplay
+    traffic_window: TrafficDisplay
+    art_window: ArtworkDisplay
+    nrsc5_window: NRSC5
 
     def __init__(self, title: str, width: int, height: int):
         super().__init__()
@@ -282,6 +295,57 @@ class SettingsWindow(tkinter.Tk):
         submit_button = tkinter.Button(self, text='Submit', command=self.handle_submit)
         submit_button.pack(anchor='w')
 
+    def setup_display_windows(self):
+        """
+        Setup windows to display traffic, weather, artwork, and station information.
+        """
+        # Management objects for NRSC5 and this program.
+        self.nrsc5_window = NRSC5(self.stop)
+        self.nrsc5_window.channel = self.program.get()
+        self.nrsc5_window.ppm = self.ppm.get()
+        # TODO: Change!!!
+        self.nrsc5_window.freq = '104.5'
+        # Clean up the dump directory.
+        self.clean_dump()
+        # Management objects for key components.
+        radar = RadarMap(
+            AreaMap(),
+            do_save=self.save_dir.get() != '',
+            save_dir=self.save_dir.get()
+        )
+        traffic = Traffic(
+            do_save=self.save_dir.get() != '',
+            save_dir=self.save_dir.get()
+        )
+        # Display management objects.
+        self.radar_window = RadarDisplay(radar, self.stop)
+        self.traffic_window = TrafficDisplay(traffic, self.stop)
+        # Handle artwork feature.
+        if self.art.get():
+            artwork = Artwork(
+                do_save=self.save_dir.get() != '',
+                save_dir=self.save_dir.get()
+            )
+            self.art_window = ArtworkDisplay(artwork, self.stop)
+        # Else, make NRSC5 instance delete artwork.
+        else:
+            self.nrsc5_window.artwork_del = Artwork.delete_artwork
+
+    def stop(self):
+        # Stop NBSR, NRSC5, and exit.
+        self.nrsc5_window.nbsr.terminate()
+        self.nrsc5_window.proc.terminate()
+        self.nrsc5_window.quit()
+        print('Exiting')
+
+    # Clean up the dump directory.
+    @staticmethod
+    def clean_dump():
+        files = glob(os.path.join(DUMP, '*'))
+        old_files = [x for x in files if '.gitignore' not in x]
+        for file in old_files:
+            os.remove(file)
+
     @property
     def window_title(self) -> str:
         return self._title
@@ -293,6 +357,18 @@ class SettingsWindow(tkinter.Tk):
         """
         self._title = value
         super().title(value)
+
+    # Run program.
+    def run(self):
+        self.setup_display_windows()
+        # Start NRSC5.
+        self.nrsc5_window.run()
+        # Start display loop, handling exit.
+        try:
+            self.mainloop()
+        except KeyboardInterrupt:
+            # Stop important components.
+            self.stop()
 
     def handle_submit(self):
         """
@@ -311,6 +387,8 @@ class SettingsWindow(tkinter.Tk):
                 title='Invalid Settings',
                 message='At least one of the settings you entered is invalid. See form for more details.'
             )
+            return
+        self.run()
 
 
 class CheckboxInput(tkinter.Checkbutton):

@@ -268,10 +268,10 @@ class NBSR(multiprocessing.Process):
 
 
 # NRSC5 display and process manager.
-class NRSC5(tkinter.Tk):
+class NRSC5(tkinter.Toplevel):
     def __init__(self, delete_eh):
         # Set up window.
-        tkinter.Tk.__init__(self)
+        super().__init__()
         self.title('HDFM - Information')
         self.geometry('730x160')
         # NRSC5 arguments.
