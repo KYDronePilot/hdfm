@@ -1,8 +1,105 @@
 import os
 import tkinter
 from typing import Any, Callable, Dict
+from tkinter import messagebox
 
 from cerberus import Validator
+
+
+class Settings:
+    """
+    For holding runtime settings of the application.
+
+    Attributes:
+        program: HD Radio program, for stations with subchannels
+        ppm: PPM error correction
+        save_dir: Directory to save weather and traffic images to
+        show_log: Whether to show logging information
+        show_art: Whether to display album/station art
+        nrsc5_path: Path to NRSC5 executable
+    """
+    nrsc5_path: str
+    program: int
+    ppm: int
+    save_dir: str
+    show_log: bool
+    show_art: bool
+
+    def __init__(self, nrsc5_path: str, program: int, ppm: int, save_dir: str, show_log: bool, show_art: bool):
+        self.nrsc5_path = nrsc5_path
+        self.program = program
+        self.ppm = ppm
+        self.save_dir = save_dir
+        self.show_log = show_log
+        self.show_art = show_art
+
+    @classmethod
+    def init_raw(cls, nrsc5_path: str, program: str, ppm: str, save_dir: str, show_log: bool, show_art: bool):
+        """
+        Create instance from raw settings values (all values assumed valid).
+        """
+        return cls(
+            nrsc5_path,
+            int(program),
+            int(ppm),
+            save_dir,
+            show_log,
+            show_art
+        )
+
+    @classmethod
+    def validate_all_fields(cls, nrsc5_path: str, program: str, ppm: str, save_dir: str, show_log: bool,
+                            show_art: bool):
+        """
+        Validate all settings fields.
+
+        Returns:
+            Whether all fields are valid
+        """
+        return (
+            cls.validate_nrsc5_path(nrsc5_path) == ''
+            and cls.validate_program(program) == ''
+            and cls.validate_ppm(ppm) == ''
+            and cls.validate_save_dir(save_dir) == ''
+        )
+
+    @staticmethod
+    def validate_nrsc5_path(value: str):
+        if value == '':
+            return 'Please enter path to NRSC-5 executable'
+        if not os.path.isfile(value):
+            return 'Path not valid'
+        return ''
+
+    @staticmethod
+    def validate_program(value: str):
+        if value == '':
+            return 'Please enter HD Radio program'
+        try:
+            value = int(value)
+        except ValueError:
+            pass
+        if not validate(value, {'type': 'integer', 'min': 0}):
+            return 'Program must be a number greater than 0'
+        return ''
+
+    @staticmethod
+    def validate_ppm(value: str):
+        if value == '':
+            return 'Please enter PPM error correction'
+        try:
+            int(value)
+        except ValueError:
+            return 'Value must be an integer'
+        return ''
+
+    @staticmethod
+    def validate_save_dir(value: str) -> str:
+        if value == '':
+            return ''
+        if not os.path.isdir(value):
+            return 'Not a valid directory'
+        return ''
 
 
 def validate(value: Any, constraints: Dict[str, str]) -> bool:
@@ -182,6 +279,9 @@ class SettingsWindow(tkinter.Tk):
         art_checkbox.pack(anchor='w')
         self.art = art_checkbox.is_checked
 
+        submit_button = tkinter.Button(self, text='Submit', command=self.handle_submit)
+        submit_button.pack(anchor='w')
+
     @property
     def window_title(self) -> str:
         return self._title
@@ -193,6 +293,24 @@ class SettingsWindow(tkinter.Tk):
         """
         self._title = value
         super().title(value)
+
+    def handle_submit(self):
+        """
+        Handle form submit.
+        """
+        valid = Settings.validate_all_fields(
+            self.nrsc5_path.get(),
+            self.program.get(),
+            self.ppm.get(),
+            self.save_dir.get(),
+            self.logging.get(),
+            self.art.get()
+        )
+        if not valid:
+            messagebox.showerror(
+                title='Invalid Settings',
+                message='At least one of the settings you entered is invalid. See form for more details.'
+            )
 
 
 class CheckboxInput(tkinter.Checkbutton):
