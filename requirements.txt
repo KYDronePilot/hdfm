@@ -1,0 +1,3 @@
+Pillow==6.2.1
+PyInstaller==3.5
+Cerberus==1.3.2

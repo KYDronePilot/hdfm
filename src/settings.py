@@ -177,12 +177,12 @@ class InputGroup:
         self.frame = tkinter.Frame(root)
         # Pack label element
         self.label_elem = tkinter.Label(self.frame, text=label, justify=tkinter.LEFT)
-        self.label_elem.grid(row=0, column=0, sticky='w')
+        # self.label_elem.grid(row=0, column=0, sticky='w')
         self.label_elem.pack(anchor='w')
         # Pack feedback element
         self.feedback = tkinter.StringVar()
         self.feedback_elem = tkinter.Label(self.frame, textvariable=self.feedback, fg='red')
-        self.feedback_elem.grid(row=1, column=0, sticky='w')
+        # self.feedback_elem.grid(row=1, column=0, sticky='w')
         self.feedback_elem.pack(anchor='w')
 
     @property
@@ -206,7 +206,7 @@ class InputGroup:
         Pack the input group.
         """
         self.input_elem = input_elem
-        self.input_elem.grid(row=2, column=0, sticky='we')
+        # self.input_elem.grid(row=2, column=0, sticky='we')
         self.input_elem.pack(anchor='nw', fill=tkinter.X, expand=False)
 
         self.frame.pack(anchor='nw', fill=tkinter.X, expand=False)
@@ -402,7 +402,7 @@ class CheckboxInput(tkinter.Checkbutton):
 
     def __init__(self, root: SettingsWindow, label: str, default: bool = False):
         self.is_checked = tkinter.BooleanVar(value=default)
-        super().__init__(root, text=label, variable=self.is_checked, onvalue=True, offvalue=False, bg='black', pady=5)
+        super().__init__(root, text=label, variable=self.is_checked, onvalue=True, offvalue=False, pady=5)
 
 
 class NRSC5PathInput(TextInput):
