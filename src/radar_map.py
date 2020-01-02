@@ -1,81 +1,125 @@
-import os
-import os.path
 from datetime import datetime
-from glob import glob
+from pathlib import Path
+from typing import Optional
 
 from PIL import Image, ImageFont, ImageDraw
+from PIL.Image import Image as ImageType
 
-from src.us_map import AreaMap
-from . import DUMP, FONT, SAVES
+from config import static_config
+from src.map_manager import MapManager
 
 
-# For managing received radar overlays.
-class RadarMap:
-    def __init__(self, area_map, do_save=False, save_dir=SAVES):
-        # File name of current overlay.
-        self.filename = ''
-        self.overlay = None
-        self.area_map = area_map
-        # Map with overlay.
-        self.img = None
-        # Whether radar images should be saved.
-        self.do_save = do_save
-        # Save directory.
-        self.save_dir = save_dir
+class DopplerRadarManager:
+    """
+    Doppler radar manager. Radar is composed of a cropped street map and radar overlay received from iHearRadio
+    stations.
 
-    # Get a timestamp for right now.
+    Attributes:
+        map_manager: Street map manager
+        overlay: Radar overlay image
+        _radar_map: Actual doppler radar map
+    """
+
+    map_manager: MapManager
+    overlay: ImageType
+    _radar_map: Optional[ImageType]
+
+    def __init__(self, map_manager: MapManager, overlay: ImageType):
+        self.map_manager = map_manager
+        self.overlay = overlay
+        self._radar_map = None
+
+    @classmethod
+    def init_from_overlay_file(cls, map_manager: MapManager, overlay_file: Path) -> 'DopplerRadarManager':
+        """
+        Create radar instance from an overlay file.
+
+        Args:
+            map_manager: Street map manager
+            overlay_file: Path to radar overlay file
+
+        Returns:
+            New radar instance
+        """
+        image = Image.open(overlay_file)
+        return cls(map_manager, image)
+
+    @classmethod
+    def init_from_overlay_and_config_files(cls, config_file: Path, overlay_file: Path) -> 'DopplerRadarManager':
+        """
+        Create radar instance from config and overlay files.
+
+        Args:
+            config_file: Path to radar config file
+            overlay_file: Path to radar overlay file
+
+        Returns:
+            New radar instance
+        """
+        with config_file.open() as fp:
+            map_manager = MapManager.init_from_config(fp)
+        return cls.init_from_overlay_file(map_manager, overlay_file)
+
     @staticmethod
-    def timestamp():
+    def _timestamp() -> str:
+        """
+        Radar timestamp.
+
+        Returns:
+            Timestamp formatted for radar
+        """
         return datetime.now().strftime('%m-%d-%Y_%I-%M-%S_%p')
 
-    # Put timestamp on radar image.
-    def stamp(self):
-        # Write timestamp in bottom right corner.
-        font = ImageFont.truetype(FONT, 25)
-        draw = ImageDraw.Draw(self.img)
-        draw.text((550, 835), self.timestamp(), font=font, fill='black')
-
-    # Save radar image.
-    def save(self):
-        name = 'radar_{0}.png'.format(self.timestamp())
-        self.img.save(os.path.join(self.save_dir, name))
-
-    # Update the current map overlay.
-    def update_overlay(self):
+    def timestamp_image(self, image: ImageType):
         """
+        Timestamp an image.
+            Writes to bottom right corner
 
-        :return: True if updated, False if not
+        Args:
+            image: Image to timestamp
+
+        Returns:
+            Timestamped image
         """
-        # If no config has been received, try to get one.
-        if not self.area_map.has_config():
-            rc = self.area_map.get_config()
-            # If still no config, wait till later.
-            if not rc:
-                return False
-        # Get any overlays new overlays.
-        files = glob(os.path.join(DUMP, '*DWRO*'))
-        new_files = [x for x in files if os.path.basename(x) != self.filename]
-        # If there are none, delete old ones and exit.
-        if not new_files:
-            for file in files:
-                os.remove(file)
-            return False
-        # Update using the first new overlay.
-        self.overlay = Image.open(new_files[0]).convert('RGBA')
-        self.overlay = self.overlay.resize((900, 900))
-        # Combine map and overlay.
-        self.img = Image.alpha_composite(
-            self.area_map.get_map(),
-            self.overlay
+        font = ImageFont.truetype(str(static_config.font_file), 25)
+        draw = ImageDraw.Draw(image)
+        draw.text((550, 835), self._timestamp(), font=font, fill='black')
+
+    @staticmethod
+    def overlay_image(radar_overlay: ImageType, map_image: ImageType) -> ImageType:
+        """
+        Overlay the radar on the map image.
+
+        Args:
+            radar_overlay: Radar overlay image
+            map_image: Map image to overlay the radar onto
+
+        Returns:
+            Overlayed radar map
+        """
+        radar_overlay = radar_overlay.resize((900, 900))
+        return Image.alpha_composite(
+            map_image,
+            radar_overlay.convert('RGBA')
         )
-        # Timestamp the radar.
-        self.timestamp()
-        # Update overlay filename.
-        self.filename = os.path.basename(new_files[0])
-        # Save file if necessary.
-        if self.do_save:
-            self.save()
-        # Delete all overlays.
-        for file in files:
-            os.remove(file)
-        return True
+
+    @property
+    def radar_map(self) -> ImageType:
+        """
+        Get doppler radar map from cache (if possible), or generate one.
+
+        Returns:
+            Doppler radar map
+        """
+        if self._radar_map is not None:
+            return self._radar_map
+        # Generate image and timestamp it
+        radar_map = self.overlay_image(self.overlay, self.map_manager.map)
+        self.timestamp_image(radar_map)
+        # Cache and return
+        self.radar_map = radar_map
+        return radar_map
+
+    @radar_map.setter
+    def radar_map(self, value: ImageType):
+        self._radar_map = value

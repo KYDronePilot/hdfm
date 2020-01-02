@@ -6,6 +6,8 @@ from typing import ClassVar, List, Union, Dict, TextIO, Any, Tuple, Optional
 from PIL import Image
 from PIL.Image import Image as ImageType
 
+from config import static_config
+
 IHeartRadioConfigType = Dict[str, Union[str, List[str]]]
 
 
@@ -119,9 +121,7 @@ class MapManager:
         lon_right: Longitude of right edge
         area_id: Area ID of map
         coordinates: Coordinates of map's edges
-        main_map: Large map of US from which smaller maps are taken
         _map: Cached map instance for area specified by coordinates
-        cache_dir: Directory for caching map files
     """
 
     # Max latitude of US map in a linear form.
@@ -135,37 +135,31 @@ class MapManager:
     lon_right = float
     area_id = AreaId
     coordinates: Coordinates
-    main_map: Path
     _map: Optional[ImageType]
-    cache_dir: Path
 
-    def __init__(self, area_id: AreaId, coordinates: Coordinates, main_map: Path, cache_dir: Path):
+    def __init__(self, area_id: AreaId, coordinates: Coordinates):
         self.area_id = area_id
         self.coordinates = coordinates
-        self.main_map = main_map
         self.lat_top = coordinates.value[0][0]
         self.lat_bottom = coordinates.value[1][0]
         self.lon_left = coordinates.value[0][1]
         self.lon_right = coordinates.value[1][1]
         self._map = None
-        self.cache_dir = cache_dir
 
     @property
     def map_cache_file(self) -> Path:
         """
         Name of the map cache file.
         """
-        return self.cache_dir / Path(f'map_{self.area_id.value}.png')
+        return static_config.cache_directory / Path(f'map_{self.area_id.value}.png')
 
     @classmethod
-    def init_from_config(cls, fp: TextIO, main_map: Path, cache_dir: Path) -> 'Map':
+    def init_from_config(cls, fp: TextIO) -> 'MapManager':
         """
         Create instance from config.
 
         Args:
             fp: File handle
-            main_map: Path to main map
-            cache_dir: Directory where maps are cached
 
         Returns:
             New map instance
@@ -174,16 +168,17 @@ class MapManager:
         config = IHeartRadioConfig.load(config_text)
         area_id = AreaId(config[AreaId.key])
         coords = Coordinates(config[Coordinates.key])
-        return cls(area_id, coords, main_map, cache_dir)
+        return cls(area_id, coords)
 
-    def _load_main_map(self) -> ImageType:
+    @staticmethod
+    def _load_main_map() -> ImageType:
         """
         Load main map to use for cropping.
 
         Returns:
             Loaded map
         """
-        return Image.open(self.main_map)
+        return Image.open(static_config.main_map_file)
 
     def create_map(self) -> ImageType:
         """
@@ -233,7 +228,7 @@ class MapManager:
         if self.map_cache_file.exists():
             map_image = Image.open(self.map_cache_file)
             self.map = map_image
-            return map_image
+            return map_image.convert('RGBA')
         map_image = self.create_map()
         self.map = map_image
         return map_image
