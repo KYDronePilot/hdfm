@@ -1,54 +1,44 @@
-import os
-import os.path
-from datetime import datetime
-from glob import glob
+from typing import BinaryIO
 
 from PIL import Image
+from PIL.Image import Image as ImageType
 
-from . import DUMP, SAVES
 
+class ArtworkManager:
+    """
+    Management of album/station artwork.
 
-# For managing album/station
-class Artwork:
-    def __init__(self, do_save=False, save_dir=SAVES):
-        # Artwork saving information.
-        self.do_save = do_save
-        self.save_dir = save_dir
-        # Current artwork image.
-        self.img = None
+    Attributes:
+        _image: The artwork image
+        filename: Name of artwork image file
+    """
 
-    # Get a timestamp for right now.
-    @staticmethod
-    def timestamp():
-        return datetime.now().strftime('%m-%d-%Y_%I-%M-%S_%p')
+    _image: ImageType
+    filename: str
 
-    # Save artwork.
-    def save(self):
-        name = 'artwork_{0}.png'.format(self.timestamp())
-        self.img.save(os.path.join(self.save_dir, name))
+    def __init__(self, image: ImageType, filename: str):
+        self._image = image
+        self.filename = filename
 
-    # Delete artwork files.
-    @staticmethod
-    def delete_artwork():
-        files = glob(os.path.join(DUMP, '*'))
-        art_files = [x for x in files if x.endswith('.jpg')]
-        for art_file in art_files:
-            os.remove(art_file)
+    @classmethod
+    def load_image(cls, fp: BinaryIO, filename: str) -> 'ArtworkManager':
+        """
+        Load an artwork image from a file handle.
 
-    # Update artwork.
-    def update(self):
-        # Get any artwork files.
-        files = glob(os.path.join(DUMP, '*'))
-        art_files = [x for x in files if x.endswith('.jpg')]
-        # If no new art, exit.
-        if not art_files:
-            return False
-        # Update to last file.
-        self.img = Image.open(art_files[0]).convert('RGBA')
-        # If set, save artwork.
-        if self.do_save:
-            self.save()
-        # Delete all other artwork.
-        for file in art_files:
-            os.remove(file)
-        return True
+        Args:
+            fp: File handle
+            filename: Name of file
+
+        Returns:
+            New artwork instance
+        """
+        image = Image.open(fp).convert('RGBA')
+        return cls(image, filename)
+
+    @property
+    def image(self) -> ImageType:
+        return self._image
+
+    @image.setter
+    def image(self, value: ImageType):
+        self._image = value
