@@ -1,86 +1,109 @@
-import os
-import os.path
 import re
-from datetime import datetime
-from glob import glob
+import time
+from pathlib import Path
+from typing import List, Optional, BinaryIO
 
 from PIL import Image
+from PIL.Image import Image as ImageType
 
-from . import DUMP, SAVES
 
-
-# For processing traffic tiles.
 class TrafficTile:
-    def __init__(self, filename):
+    """
+    Single received traffic tile.
+
+    Attributes:
+        filename: Name of file
+        _image: The actual image
+    """
+
+    filename: str
+    _image: ImageType
+
+    def __init__(self, filename: str, image: ImageType):
         self.filename = filename
-        # x and y coordinates of tile in map.
-        self.x = None
-        self.y = None
-        # The tile image.
-        self.img = None
-        # Load everything.
-        self.load()
+        self._image = image
 
-    # Get x and y coordinates (0 indexed).
-    def get_xy(self):
+    @classmethod
+    def load_file(cls, fp: BinaryIO, filename: str) -> 'TrafficTile':
+        """
+        Load traffic tile from file handle.
+
+        Args:
+            fp: Traffic tile file handle
+            filename: Name of file
+
+        Returns:
+            Traffic tile instance
+        """
+        image = Image.open(fp).convert('RGBA')
+        return cls(filename, image)
+
+    @property
+    def xy_coordinates(self) -> (int, int):
+        """
+        Coordinates of tile in final image.
+
+        Returns:
+            Coordinates in (x, y) form (zero indexed)
+        """
         match = re.search('_([123])_([123])_', self.filename)
-        self.x = int(match.group(2)) - 1
-        self.y = int(match.group(1)) - 1
+        if match is None:
+            raise Exception(f'Traffic tile coordinates are not in filename: "{self.filename}"')
+        return int(match.group(2)) - 1, int(match.group(1)) - 1
 
-    # Get the tile image.
-    def get_tile(self):
-        self.img = Image.open(self.filename).convert('RGBA')
+    @property
+    def image(self) -> ImageType:
+        return self._image
 
-    # Load coordinates and tile image.
-    def load(self):
-        self.get_xy()
-        self.get_tile()
+    @image.setter
+    def image(self, value: ImageType):
+        self._image = value
 
 
-# For processing traffic images.
-class Traffic:
-    def __init__(self, do_save=False, save_dir=SAVES):
-        # The complete traffic map.
-        self.map = Image.new('RGBA', (600, 600))
-        # Keeps track of when all tiles are updated.
-        self.tiles = [False] * 9
-        # Whether or not maps should be saved.
-        self.do_save = do_save
-        # Save directory.
-        self.save_dir = save_dir
+class TrafficMapManager:
+    """
+    Traffic map management class. Processes traffic tiles received from iHeartRadio.
 
-    # Get a timestamp for right now.
-    @staticmethod
-    def timestamp():
-        return datetime.now().strftime('%m-%d-%Y_%I-%M-%S_%p')
+    Attributes:
+        _traffic_map: Traffic map tile pasteboard, where traffic tiles are pasted as they are received.
+        _tiles: Received traffic tiles
+    """
 
-    # Save the map.
-    def save(self):
-        name = 'traffic_{0}.png'.format(self.timestamp())
-        self.map.save(os.path.join(self.save_dir, name))
-        # Reset update-tracking tiles.
-        self.tiles = [False] * 9
+    _traffic_map: ImageType
+    _tiles: List[Optional[TrafficTile]]
 
-    # Paste a tile on the map.
-    def paste(self, tile):
-        self.map.paste(tile.img, (tile.x * 200, tile.y * 200))
-        # Show that tile was updated.
-        self.tiles[tile.x + tile.y * 3] = True
-        # Delete tile file.
-        os.remove(tile.filename)
+    def __init__(self):
+        self._traffic_map = Image.new('RGBA', (600, 600))
+        self._tiles = [None] * 9
 
-    # Load and paste any new tiles on the map.
-    def update_tiles(self):
-        # Get traffic tiles.
-        files = glob(os.path.join(DUMP, '*TMT*'))
-        tiles = [TrafficTile(x) for x in files]
-        # If no new tiles, nothing to be updated.
-        if not tiles:
-            return False
-        # Paste tiles on the map.
-        for tile in tiles:
-            self.paste(tile)
-        # Save if specified and all tiles are updated.
+    def add_tile(self, tile: TrafficTile):
+        """
+        Add a new traffic tile to the map.
+
+        Args:
+            tile: Tile to add
+        """
+        x, y = tile.xy_coordinates
+        self._tiles[x + y * 3] = tile
+        self._paste_tile(tile)
+
+    def _paste_tile(self, tile: TrafficTile):
+        """
+        Paste tile on full map.
+
+        Args:
+            tile: Tile to paste
+        """
+        x, y = tile.xy_coordinates
+        self._traffic_map.paste(tile.image, (x * 200, y * 200))
+
+    @property
+    def traffic_map(self) -> ImageType:
+        return self._traffic_map
+
+    @traffic_map.setter
+    def traffic_map(self, value: ImageType):
+        self._traffic_map = value
         if self.do_save and False not in self.tiles:
             self.save()
         return True
