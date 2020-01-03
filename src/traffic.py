@@ -48,7 +48,9 @@ class TrafficTile:
         """
         match = re.search('_([123])_([123])_', self.filename)
         if match is None:
-            raise Exception(f'Traffic tile coordinates are not in filename: "{self.filename}"')
+            raise Exception(
+                f'Traffic tile coordinates are not in filename: "{self.filename}"'
+            )
         return int(match.group(2)) - 1, int(match.group(1)) - 1
 
     @property
