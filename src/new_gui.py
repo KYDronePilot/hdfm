@@ -3,9 +3,131 @@ Temporary module for designing new UI.
 """
 
 import tkinter
-from typing import Any
-from PIL import Image, ImageTk
+from glob import glob
+from pathlib import Path
 from tkinter import ttk
+from typing import Any, Optional, ClassVar, List
+
+from PIL import Image, ImageTk
+from PIL.Image import Image as ImageType
+
+from artwork import ArtworkManager
+from radar_map import DopplerRadarManager
+from traffic import TrafficMapManager, TrafficTile
+from config import static_config
+
+
+# from map_manager import MapManager
+
+
+class ImagePanel(tkinter.Label):
+    """
+    Panel for displaying images.
+
+    Attributes:
+        _original_image: The original image currently being displayed (no resizing)
+        _current_image: The current image being displayed, with potential resizing
+        _tk_image: Tkinter photo image instance currently being displayed
+        prev_event_w: Width from the previous size change event
+        prev_event_h: Height from the previous size change event
+    """
+
+    _original_image: ImageType
+    _current_image: ImageType
+    _tk_image: ImageTk.PhotoImage
+    prev_event_w: int
+    prev_event_h: int
+
+    def __init__(self, master, dimensions: (int, int)):
+        super().__init__(master)
+        self._current_image = Image.new('RGBA', dimensions)
+        self.image = Image.new('RGBA', dimensions)
+        self.pack(fill=tkinter.BOTH, expand=tkinter.YES)
+        # Reload image now that panel is packed
+        self.reload_image()
+        # Resize event handler.
+        self.bind('<Configure>', self._resize_image)
+        self.prev_event_w = 0
+        self.prev_event_h = 0
+
+    @property
+    def image(self) -> ImageType:
+        """
+        Original image getter.
+
+        Returns:
+            Original version of image being displayed
+        """
+        return self._original_image
+
+    @image.setter
+    def image(self, image: ImageType):
+        """
+        Displayed image setter.
+        Sets up the new image to display and reloads the panel.
+
+        Args:
+            image: New image to set
+        """
+        self._original_image = image.copy()
+        self._current_image = self._original_image.resize(self._current_image.size)
+        # Reload image on display
+        self.reload_image()
+
+    def reload_image(self):
+        """
+        Reload image that is displayed on the screen.
+        """
+        self._tk_image = ImageTk.PhotoImage(self._current_image)
+        self.configure(image=self._tk_image)
+
+    def _resize_image(self, event):
+        """
+        Image resize event handler.
+
+        TODO: Resizing is not perfect by any means, but there are very few resources on how to do it properly.
+
+        Args:
+            event: Information about resize event
+        """
+        new_w = event.width
+        new_h = event.height
+        # Don't resize if dimensions haven't changed
+        if new_w == self.prev_event_w and new_h == self.prev_event_h:
+            return
+        self.prev_event_w = new_w
+        self.prev_event_h = new_h
+        old_w, old_h = self._current_image.size
+        # If dimensions match, nothing needs to be resized.
+        if old_w == new_w or old_h == new_h:
+            return
+        # Difference in new and old dimensions.
+        h_diff = abs(new_h - old_h)
+        w_diff = abs(new_w - old_w)
+        # Adjust either the new height or width to maintain image constraints.
+        if h_diff > w_diff:
+            new_w = (old_w * new_h) // old_h
+        else:
+            new_h = (old_h * new_w) // old_w
+        # Resize
+        self._current_image = self._original_image.resize((new_w, new_h))
+        self.reload_image()
+
+    @property
+    def screen_width(self) -> int:
+        return self.winfo_screenwidth()
+
+    @property
+    def screen_height(self) -> int:
+        return self.winfo_screenheight()
+
+    @property
+    def width(self) -> int:
+        return self.winfo_width()
+
+    @property
+    def height(self) -> int:
+        return self.winfo_height()
 
 
 class State:
@@ -38,10 +160,46 @@ class State:
         self.device = tkinter.StringVar()
 
 
+class Controller:
+    """
+    Central manager of backend operations.
+
+    Attributes:
+        artwork_manager: Manages artwork images
+        traffic_map_manager: Manages traffic maps
+        radar_map_manager: Manages weather radar maps
+        state_vars: UI state variables
+    """
+
+    artwork_manager: Optional[ArtworkManager]
+    traffic_map_manager: Optional[TrafficMapManager]
+    radar_map_manager: Optional[DopplerRadarManager]
+    state_vars: State
+
+    def __init__(self, state_vars: State):
+        self.artwork_manager = None
+        self.traffic_map_manager = TrafficMapManager()
+        self.radar_map_manager = None
+        self.state_vars = state_vars
+
+    def timed_event_handler(self):
+        """
+        Gets called at specified intervals to perform update tasks.
+        """
+
+
 class Root(tkinter.Tk):
     """
     Root window, on which everything is built.
+
+    Attributes:
+        controller: Controller instance for managing operations
     """
+
+    # Delay between event updates
+    EVENT_UPDATE_INTERVAL: ClassVar[int] = 1000
+
+    controller: Controller
     toolbar: Any
     tab_container: Any
     info_widget: Any
@@ -49,11 +207,23 @@ class Root(tkinter.Tk):
 
     def __init__(self, title: str, width: int, height: int):
         super().__init__()
+        # self.controller = Controller()
         self.title(title)
+        self.aspect(220, 333, 220, 333)
+        self.minsize(width=446, height=675)
         # TODO: Get rid of window positioning
         self.geometry(f'{width}x{height}+1000+300')
         self.state_vars = State()
         self.setup_components()
+        # Schedule timed event handler
+        self.after(str(self.EVENT_UPDATE_INTERVAL), self.update_event_handler)
+
+    def update_event_handler(self):
+        """
+        Event handler triggered at regular intervals to perform update tasks.
+        """
+        # self.controller.timed_event_handler()
+        self.after(str(self.EVENT_UPDATE_INTERVAL), self.update_event_handler)
 
     def setup_components(self):
         """
@@ -223,6 +393,51 @@ class RadarFrame(ttk.LabelFrame):
     def __init__(self, master, state: State):
         super().__init__(master, text='Radar Map')
         self.state_vars = state
+        self.after(str(Root.EVENT_UPDATE_INTERVAL), self.update_event_handler)
+        self.weather_panel = ImagePanel(self, (20, 20))
+        self.radar_map_manager = None
+
+    @staticmethod
+    def find_radar_overlay() -> Optional[Path]:
+        """
+        Find weather overlay file.
+
+        Returns:
+            Path to overlay if exists
+        """
+        files = list(static_config.dump_directory.glob('*DWRO*'))
+        # If more than 1, just pick one and clear out the rest
+        if len(files) >= 1:
+            for file in files[1:]:
+                file.unlink()
+            return files[0]
+
+    def find_radar_config_file(self) -> Optional[Path]:
+        """
+        Find config file for weather radar map.
+
+        Returns:
+            Path to config if exists
+        """
+        files = list(static_config.dump_directory.glob('*DWRI*'))
+        # If more than 1, just pick one and clear out the rest
+        if len(files) >= 1:
+            for file in files[1:]:
+                file.unlink()
+            return files[0]
+
+    def update_event_handler(self):
+        """
+        Event handler triggered at regular intervals to perform update tasks.
+        """
+        overlay = self.find_radar_overlay()
+        config = self.find_radar_config_file()
+        if overlay is None or config is None:
+            self.after(str(Root.EVENT_UPDATE_INTERVAL), self.update_event_handler)
+            return
+        self.radar_map_manager = DopplerRadarManager.init_from_overlay_and_config_files(config, overlay)
+        self.weather_panel.image = self.radar_map_manager.radar_map
+        self.after(str(Root.EVENT_UPDATE_INTERVAL), self.update_event_handler)
 
 
 class TrafficFrame(ttk.LabelFrame):
@@ -235,6 +450,37 @@ class TrafficFrame(ttk.LabelFrame):
     def __init__(self, master, state: State):
         super().__init__(master, text='Traffic Map')
         self.state_vars = state
+        self.after(str(Root.EVENT_UPDATE_INTERVAL), self.update_event_handler)
+        self.traffic_panel = ImagePanel(self, (50, 50))
+        self.traffic_map_manager = TrafficMapManager()
+        # self.traffic_panel.image = Image.open('/tmp/hdfm_dump/748_TMT_03g65g_1_2_20191227_2144_02ec.png')
+
+    @staticmethod
+    def find_traffic_tiles() -> List[Path]:
+        """
+        Find traffic tiles to update map with.
+
+        Returns:
+            Found paths
+        """
+        tiles = []
+        for file in static_config.dump_directory.glob('*TMT*'):
+            tiles.append(file)
+        return tiles
+
+    def update_event_handler(self):
+        """
+        Event handler triggered at regular intervals to perform update tasks.
+        """
+        tiles = self.find_traffic_tiles()
+        for tile in tiles:
+            with tile.open('rb') as fp:
+                tile_instance = TrafficTile.load_file(fp, tile.name)
+            self.traffic_map_manager.add_tile(tile_instance)
+        if len(tiles) > 0:
+            self.traffic_panel.image = self.traffic_map_manager.traffic_map
+        # self.traffic_panel.image = Image.open('/tmp/hdfm_dump/748_TMT_03g65g_1_2_20191227_2144_02ec.png')
+        self.after(str(Root.EVENT_UPDATE_INTERVAL), self.update_event_handler)
 
 
 class SettingsInput(ttk.Frame):

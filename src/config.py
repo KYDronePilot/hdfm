@@ -2,6 +2,7 @@
 Configuration management.
 """
 import json
+import shutil
 from pathlib import Path
 from typing import List, Any, ClassVar
 import tempfile
@@ -95,7 +96,7 @@ class StaticConfig:
         """
         # Clean dump directory
         if cls.dump_directory.exists():
-            cls.dump_directory.rmdir()
+            shutil.rmtree(cls.dump_directory)
         cls.dump_directory.mkdir()
         # Ensure cache directory exists
         if not cls.cache_directory.exists():
