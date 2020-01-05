@@ -15,6 +15,7 @@ from artwork import ArtworkManager
 from radar_map import DopplerRadarManager
 from traffic import TrafficMapManager, TrafficTile
 from config import static_config
+from map_manager import MapManager
 
 
 # from map_manager import MapManager
@@ -70,7 +71,7 @@ class ImagePanel(tkinter.Label):
             image: New image to set
         """
         self._original_image = image.copy()
-        self._current_image = self._original_image.resize(self._current_image.size)
+        self._current_image = self._original_image.resize(self._current_image.size, Image.ANTIALIAS)
         # Reload image on display
         self.reload_image()
 
@@ -110,7 +111,7 @@ class ImagePanel(tkinter.Label):
         else:
             new_h = (old_h * new_w) // old_w
         # Resize
-        self._current_image = self._original_image.resize((new_w, new_h))
+        self._current_image = self._original_image.resize((new_w, new_h), Image.ANTIALIAS)
         self.reload_image()
 
     @property
@@ -395,48 +396,21 @@ class RadarFrame(ttk.LabelFrame):
         self.state_vars = state
         self.after(str(Root.EVENT_UPDATE_INTERVAL), self.update_event_handler)
         self.weather_panel = ImagePanel(self, (20, 20))
-        self.radar_map_manager = None
-
-    @staticmethod
-    def find_radar_overlay() -> Optional[Path]:
-        """
-        Find weather overlay file.
-
-        Returns:
-            Path to overlay if exists
-        """
-        files = list(static_config.dump_directory.glob('*DWRO*'))
-        # If more than 1, just pick one and clear out the rest
-        if len(files) >= 1:
-            for file in files[1:]:
-                file.unlink()
-            return files[0]
-
-    def find_radar_config_file(self) -> Optional[Path]:
-        """
-        Find config file for weather radar map.
-
-        Returns:
-            Path to config if exists
-        """
-        files = list(static_config.dump_directory.glob('*DWRI*'))
-        # If more than 1, just pick one and clear out the rest
-        if len(files) >= 1:
-            for file in files[1:]:
-                file.unlink()
-            return files[0]
+        self.map_manager = MapManager()
+        self.radar_map_manager = DopplerRadarManager(self.map_manager)
 
     def update_event_handler(self):
         """
         Event handler triggered at regular intervals to perform update tasks.
         """
-        overlay = self.find_radar_overlay()
-        config = self.find_radar_config_file()
-        if overlay is None or config is None:
-            self.after(str(Root.EVENT_UPDATE_INTERVAL), self.update_event_handler)
-            return
-        self.radar_map_manager = DopplerRadarManager.init_from_overlay_and_config_files(config, overlay)
-        self.weather_panel.image = self.radar_map_manager.radar_map
+        # Reload map config
+        self.map_manager.find_and_reload_config()
+        # If it has a config, reload the radar
+        if self.map_manager.has_config:
+            self.radar_map_manager.update_radar_map()
+            # If the radar map has an overlay, update the image displayed
+            if self.radar_map_manager.has_overlay:
+                self.weather_panel.image = self.radar_map_manager.radar_map
         self.after(str(Root.EVENT_UPDATE_INTERVAL), self.update_event_handler)
 
 
@@ -455,31 +429,13 @@ class TrafficFrame(ttk.LabelFrame):
         self.traffic_map_manager = TrafficMapManager()
         # self.traffic_panel.image = Image.open('/tmp/hdfm_dump/748_TMT_03g65g_1_2_20191227_2144_02ec.png')
 
-    @staticmethod
-    def find_traffic_tiles() -> List[Path]:
-        """
-        Find traffic tiles to update map with.
-
-        Returns:
-            Found paths
-        """
-        tiles = []
-        for file in static_config.dump_directory.glob('*TMT*'):
-            tiles.append(file)
-        return tiles
-
     def update_event_handler(self):
         """
         Event handler triggered at regular intervals to perform update tasks.
         """
-        tiles = self.find_traffic_tiles()
-        for tile in tiles:
-            with tile.open('rb') as fp:
-                tile_instance = TrafficTile.load_file(fp, tile.name)
-            self.traffic_map_manager.add_tile(tile_instance)
-        if len(tiles) > 0:
+        # If more tiles get added, update image displayed in panel
+        if self.traffic_map_manager.find_and_add_tiles():
             self.traffic_panel.image = self.traffic_map_manager.traffic_map
-        # self.traffic_panel.image = Image.open('/tmp/hdfm_dump/748_TMT_03g65g_1_2_20191227_2144_02ec.png')
         self.after(str(Root.EVENT_UPDATE_INTERVAL), self.update_event_handler)
 
 

@@ -109,16 +109,40 @@ class Coordinates(IHeartRadioConfigEntry):
         lat_bottom, lon_right = value[1][1:-1].split(',')
         return (float(lat_top), float(lon_left)), (float(lat_bottom), float(lon_right))
 
+    @property
+    def lat_top(self) -> float:
+        """
+        Latitude of top edge
+        """
+        return self.value[0][0]
+
+    @property
+    def lat_bottom(self) -> float:
+        """
+        Latitude of bottom edge
+        """
+        return self.value[1][0]
+
+    @property
+    def lon_left(self) -> float:
+        """
+        Longitude of left edge
+        """
+        return self.value[0][1]
+
+    @property
+    def lon_right(self) -> float:
+        """
+        Longitude of right edge
+        """
+        return self.value[1][1]
+
 
 class MapManager:
     """
     Map to overlay the weather radar on.
 
     Attributes:
-        lat_top: Latitude of top edge
-        lat_bottom: Latitude of bottom edge
-        lon_left: Longitude of left edge
-        lon_right: Longitude of right edge
         area_id: Area ID of map
         coordinates: Coordinates of map's edges
         _map: Cached map instance for area specified by coordinates
@@ -129,21 +153,13 @@ class MapManager:
     # Reference latitude in linear form.
     REF_LAT: ClassVar[float] = 0.7380009964270406
 
-    lat_top = float
-    lat_bottom = float
-    lon_left = float
-    lon_right = float
-    area_id = AreaId
-    coordinates: Coordinates
+    area_id = Optional[AreaId]
+    coordinates: Optional[Coordinates]
     _map: Optional[ImageType]
 
-    def __init__(self, area_id: AreaId, coordinates: Coordinates):
-        self.area_id = area_id
-        self.coordinates = coordinates
-        self.lat_top = coordinates.value[0][0]
-        self.lat_bottom = coordinates.value[1][0]
-        self.lon_left = coordinates.value[0][1]
-        self.lon_right = coordinates.value[1][1]
+    def __init__(self):
+        self.area_id = None
+        self.coordinates = None
         self._map = None
 
     @property
@@ -153,22 +169,44 @@ class MapManager:
         """
         return static_config.cache_directory / Path(f'map_{self.area_id.value}.png')
 
-    @classmethod
-    def init_from_config(cls, fp: TextIO) -> 'MapManager':
+    @property
+    def has_config(self) -> bool:
         """
-        Create instance from config.
+        Whether map manager instance has a config file loaded.
+        """
+        return self.area_id is not None and self.coordinates is not None
+
+    def reload_config(self, fp: TextIO):
+        """
+        Reload config for map.
 
         Args:
-            fp: File handle
-
-        Returns:
-            New map instance
+            Config file to reload from
         """
         config_text = fp.read()
         config = IHeartRadioConfig.load(config_text)
-        area_id = AreaId(config[AreaId.key])
-        coords = Coordinates(config[Coordinates.key])
-        return cls(area_id, coords)
+        self.area_id = AreaId(config[AreaId.key])
+        self.coordinates = Coordinates(config[Coordinates.key])
+        # Remove map so it can be reloaded
+        self._map = None
+
+    def find_and_reload_config(self) -> bool:
+        """
+        See if there is another config file ready, and reload if so.
+
+        Returns:
+            Whether the config was reloaded or not
+        """
+        files = list(static_config.dump_directory.glob('*DWRI*'))
+        # Ensure at least one file to continue
+        if len(files) == 0:
+            return False
+        with files[0].open('r') as fp:
+            self.reload_config(fp)
+        # Delete config files
+        for file in files:
+            file.unlink()
+        return True
 
     @staticmethod
     def _load_main_map() -> ImageType:

@@ -5,6 +5,7 @@ from typing import List, Optional, BinaryIO
 
 from PIL import Image
 from PIL.Image import Image as ImageType
+from config import static_config
 
 
 class TrafficTile:
@@ -88,6 +89,23 @@ class TrafficMapManager:
         x, y = tile.xy_coordinates
         self._tiles[x + y * 3] = tile
         self._paste_tile(tile)
+
+    def find_and_add_tiles(self) -> bool:
+        """
+        Find any new traffic tiles and add them to the map.
+
+        Returns:
+            Whether any new traffic tiles were found/added
+        """
+        files = list(static_config.dump_directory.glob('*TMT*'))
+        # Need at least 1 files to continue
+        if len(files) == 0:
+            return False
+        for file in files:
+            with file.open('rb') as fp:
+                self.add_tile(TrafficTile.load_file(fp, file.name))
+            file.unlink()
+        return True
 
     def _paste_tile(self, tile: TrafficTile):
         """
