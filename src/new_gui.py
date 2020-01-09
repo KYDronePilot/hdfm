@@ -6,19 +6,22 @@ import tkinter
 from glob import glob
 from pathlib import Path
 from tkinter import ttk
-from typing import Any, Optional, ClassVar, List
+from typing import Any, Optional, ClassVar, List, Callable
 
 from PIL import Image, ImageTk
 from PIL.Image import Image as ImageType
 
 from artwork import ArtworkManager
+from consts import FM_FREQUENCIES
 from radar_map import DopplerRadarManager
 from traffic import TrafficMapManager, TrafficTile
 from config import static_config
 from map_manager import MapManager
+from nrsc5 import NRSC5Program
 
 
 # from map_manager import MapManager
+from utils import get_all_gain_levels
 
 
 class ImagePanel(tkinter.Label):
@@ -166,27 +169,16 @@ class Controller:
     Central manager of backend operations.
 
     Attributes:
-        artwork_manager: Manages artwork images
-        traffic_map_manager: Manages traffic maps
-        radar_map_manager: Manages weather radar maps
         state_vars: UI state variables
+        nrsc5: NRSC5 program execution manager
     """
 
-    artwork_manager: Optional[ArtworkManager]
-    traffic_map_manager: Optional[TrafficMapManager]
-    radar_map_manager: Optional[DopplerRadarManager]
     state_vars: State
+    nrsc5: Optional[NRSC5Program]
 
     def __init__(self, state_vars: State):
-        self.artwork_manager = None
-        self.traffic_map_manager = TrafficMapManager()
-        self.radar_map_manager = None
         self.state_vars = state_vars
-
-    def timed_event_handler(self):
-        """
-        Gets called at specified intervals to perform update tasks.
-        """
+        self.nrsc5 = None
 
 
 class Root(tkinter.Tk):
@@ -204,18 +196,21 @@ class Root(tkinter.Tk):
     toolbar: Any
     tab_container: Any
     info_widget: Any
-    state_vars: Any
+    station_settings_widget: 'StationSettingWidget'
+    state_vars: State
+    nrsc5: Optional[NRSC5Program]
 
     def __init__(self, title: str, width: int, height: int):
         super().__init__()
-        # self.controller = Controller()
         self.title(title)
         self.aspect(220, 333, 220, 333)
         self.minsize(width=446, height=675)
         # TODO: Get rid of window positioning
         self.geometry(f'{width}x{height}+1000+300')
         self.state_vars = State()
+        self.controller = Controller(self.state_vars)
         self.setup_components()
+        self.nrsc5 = None
         # Schedule timed event handler
         self.after(str(self.EVENT_UPDATE_INTERVAL), self.update_event_handler)
 
@@ -223,17 +218,42 @@ class Root(tkinter.Tk):
         """
         Event handler triggered at regular intervals to perform update tasks.
         """
-        # self.controller.timed_event_handler()
         self.after(str(self.EVENT_UPDATE_INTERVAL), self.update_event_handler)
 
     def setup_components(self):
         """
         Setup components in root window.
         """
-        self.toolbar = Toolbar(self, self.state_vars)
+        self.toolbar = Toolbar(self, self.state_vars, self.handle_play_click, self.stop_nrsc5)
         self.tab_container = MainTabContainer(self, self.state_vars)
+        self.station_settings_widget = StationSettingWidget(self, self.state_vars)
+        self.station_settings_widget.pack(side=tkinter.TOP, padx=5, pady=5, fill=tkinter.X)
         self.info_widget = InfoWidget(self, self.state_vars)
         self.info_widget.pack(side=tkinter.TOP, padx=5, pady=5, fill=tkinter.X)
+
+
+    def stop_nrsc5(self):
+        """
+        Stop NRSC5 program
+        """
+        # Enable tuning fields
+        self.station_settings_widget.set_visibility(True)
+        self.nrsc5.stop()
+
+    def handle_play_click(self):
+        """
+        Handle click on play button.
+        """
+        # Ensure frequency and program are set
+        if self.state_vars.frequency.get() == '' or self.state_vars.program.get() == '':
+            return
+        # Ensure settings are set
+        if self.state_vars.ppm_error.get() == '' or self.state_vars.device.get() == '' or self.state_vars.gain.get() \
+                == '':
+            return
+        # Disable tuning fields
+        self.station_settings_widget.set_visibility(False)
+        self.start_nrsc5()
 
 
 class Toolbar(tkinter.Frame):
@@ -252,19 +272,19 @@ class Toolbar(tkinter.Frame):
     gear_image_elem: Any
     gear_button: Any
 
-    def __init__(self, master: Root, state: State):
+    def __init__(self, master: Root, state: State, play_handler: Callable, stop_handler: Callable):
         super().__init__(master, bd=1, relief=tkinter.RAISED)
         self.pack(side=tkinter.TOP, fill=tkinter.X)
         self.state_vars = state
         # Play button
         self.play_image = Image.open('icons/play.png')
         self.play_image_elem = ImageTk.PhotoImage(self.play_image)
-        self.play_button = tkinter.Button(self, image=self.play_image_elem, relief=tkinter.FLAT)
+        self.play_button = tkinter.Button(self, image=self.play_image_elem, relief=tkinter.FLAT, command=play_handler)
         self.play_button.pack(side=tkinter.LEFT, padx=2, pady=2)
         # Stop button
         self.stop_image = Image.open('icons/stop.png')
         self.stop_image_elem = ImageTk.PhotoImage(self.stop_image)
-        self.stop_button = tkinter.Button(self, image=self.stop_image_elem, relief=tkinter.FLAT)
+        self.stop_button = tkinter.Button(self, image=self.stop_image_elem, relief=tkinter.FLAT, command=stop_handler)
         self.stop_button.pack(side=tkinter.LEFT, padx=2, pady=2)
         # Separator
         self.sep1 = ttk.Separator(self, orient=tkinter.VERTICAL)
@@ -354,30 +374,25 @@ class SettingsFrame(ttk.LabelFrame):
     Frame for displaying settings.
     """
     state_vars: State
-    frequency: Any
-    program: Any
-    gain: Any
-    ppm_error: Any
-    device: Any
+    gain: 'DropdownInput'
+    ppm_error: 'DropdownInput'
+    device: 'DropdownInput'
     submit_button: Any
 
     def __init__(self, master: MainTabContainer, state: State):
         super().__init__(master, text='Settings')
         self.state_vars = state
-        # Frequency input
-        self.frequency = SettingsInput(self, 'Frequency', self.state_vars.frequency)
-        self.frequency.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
-        # Program input
-        self.program = SettingsInput(self, 'Program', self.state_vars.program)
-        self.program.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
         # Gain input
-        self.gain = SettingsInput(self, 'Gain', self.state_vars.gain)
+        self.gain = DropdownInput(self, options=['auto'] + [str(gain) for gain in get_all_gain_levels()], label='Gain',
+                                  input_var=self.state_vars.gain, default='auto')
         self.gain.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
         # PPM error input
-        self.ppm_error = SettingsInput(self, 'PPM Error', self.state_vars.ppm_error)
+        self.ppm_error = DropdownInput(self, options=[str(i) for i in range(-1000, 1001)], label='PPM Error Correction',
+                                       input_var=self.state_vars.ppm_error, default='0')
         self.ppm_error.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
         # Device input
-        self.device = SettingsInput(self, 'Device', self.state_vars.device)
+        self.device = DropdownInput(self, options=[str(i) for i in range(0, 256)], label='Device Index',
+                                    input_var=self.state_vars.device, default='0')
         self.device.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
         # Submit button
         self.submit_button = ttk.Button(self, text='Save')
@@ -444,7 +459,7 @@ class SettingsInput(ttk.Frame):
     Settings input item with label.
     """
     label: Any
-    input_elem: Any
+    input_elem: tkinter.Entry
     input_var: tkinter.StringVar
 
     def __init__(self, master: Any, label: str, input_var: tkinter.StringVar):
@@ -456,6 +471,46 @@ class SettingsInput(ttk.Frame):
         # Input
         self.input_elem = ttk.Entry(self, textvariable=self.input_var)
         self.input_elem.pack(side=tkinter.TOP, anchor='w')
+
+    def set_visibility(self, visible: bool):
+        """
+        Set visibility of field.
+
+        Args:
+            visible: Whether field is visible
+        """
+        self.input_elem.configure(state=tkinter.NORMAL if visible else tkinter.DISABLED)
+
+
+class DropdownInput(ttk.Frame):
+    """
+    Dropdown input.
+    """
+
+    label: ttk.Label
+    input_elem: tkinter.OptionMenu
+    input_var: tkinter.StringVar
+    options: List[str]
+
+    def __init__(self, master: Any, options: List[str], label: str, input_var: tkinter.StringVar, default=None):
+        super().__init__(master)
+        self.input_var = input_var
+        self.options = options
+        # Label
+        self.label = ttk.Label(self, text=f'{label}:', justify=tkinter.LEFT)
+        self.label.pack(side=tkinter.TOP, anchor='w')
+        # Input
+        self.input_elem = ttk.OptionMenu(self, self.input_var, default, *([''] + self.options))
+        self.input_elem.pack(side=tkinter.TOP, anchor='w')
+
+    def set_visibility(self, visible: bool):
+        """
+        Set visibility of field.
+
+        Args:
+            visible: Whether field is visible
+        """
+        self.input_elem.configure(state=tkinter.NORMAL if visible else tkinter.DISABLED)
 
 
 class KeyValuePanel(ttk.Frame):
@@ -476,6 +531,38 @@ class KeyValuePanel(ttk.Frame):
         # Value
         self.value = ttk.Label(self, textvariable=value, justify=tkinter.LEFT)
         self.value.pack(side=tkinter.LEFT)
+
+
+class StationSettingWidget(ttk.LabelFrame):
+    """
+    Widget for setting the current radio station to tune to.
+    """
+
+    state_vars: State
+    frequency: DropdownInput
+    program: DropdownInput
+
+    def __init__(self, master: Root, state: State):
+        super().__init__(master, text='Tune Station')
+        self.state_vars = state
+        # Frequency input
+        self.frequency = DropdownInput(self, options=[str(freq) for freq in FM_FREQUENCIES], label='Frequency',
+                                       input_var=self.state_vars.frequency)
+        self.frequency.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
+        # Program input
+        self.program = DropdownInput(self, options=[str(i) for i in range(1, 5)], label='Program',
+                                     input_var=self.state_vars.program)
+        self.program.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
+
+    def set_visibility(self, visible: bool):
+        """
+        Set visibility of fields.
+
+        Args:
+            visible: Whether the fields are visible
+        """
+        self.frequency.set_visibility(visible)
+        self.program.set_visibility(visible)
 
 
 class InfoWidget(ttk.LabelFrame):

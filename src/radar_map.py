@@ -21,13 +21,20 @@ class DopplerRadarManager:
     """
 
     map_manager: MapManager
-    overlay: ImageType
+    overlay: Optional[ImageType]
     _radar_map: Optional[ImageType]
 
-    def __init__(self, map_manager: MapManager, overlay: ImageType):
+    def __init__(self, map_manager: MapManager, overlay: Optional[ImageType] = None):
         self.map_manager = map_manager
         self.overlay = overlay
         self._radar_map = None
+
+    @property
+    def has_overlay(self) -> bool:
+        """
+        Whether instance has a radar overlay.
+        """
+        return self.overlay is not None
 
     @classmethod
     def init_from_overlay_file(
@@ -64,7 +71,36 @@ class DopplerRadarManager:
             map_manager = MapManager.init_from_config(fp)
         return cls.init_from_overlay_file(map_manager, overlay_file)
 
-    def timestamp_image(self, image: ImageType):
+    def update_overlay(self, overlay: ImageType):
+        """
+        Update the overlay of the radar map.
+
+        Args:
+            New overlay image
+        """
+        self.overlay = overlay
+
+    def update_radar_map(self) -> bool:
+        """
+        Attempt to update the radar map image, searching for a new overlay.
+
+        Returns:
+            Whether the map was updated or not
+        """
+        files = list(static_config.dump_directory.glob('*DWRO*'))
+        # Ensure at least one to continue
+        if len(files) == 0:
+            return False
+        # Update overlay with first overlay file, regardless if there are more than one
+        with files[0].open('rb') as fp:
+            self.update_overlay(Image.open(fp).convert('RGBA'))
+        # Delete all overlay files
+        for file in files:
+            file.unlink()
+        return True
+
+    @staticmethod
+    def timestamp_image(image: ImageType):
         """
         Timestamp an image.
             Writes to bottom right corner
