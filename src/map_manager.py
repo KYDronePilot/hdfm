@@ -231,11 +231,11 @@ class MapManager:
         def make_linear(val: float):
             return MapManager.LAT_MAX - math.asinh(math.tan(math.radians(val)))
 
-        lin_lat_top = make_linear(self.lat_top)
-        lin_lat_bottom = make_linear(self.lat_bottom)
+        lin_lat_top = make_linear(self.coordinates.lat_top)
+        lin_lat_bottom = make_linear(self.coordinates.lat_bottom)
         # Calculate x-coords using a ratio of a known location on the map
-        x1 = (self.lon_left + 130.781250) * 7162 / 39.34135
-        x2 = (self.lon_right + 130.781250) * 7162 / 39.34135
+        x1 = (self.coordinates.lon_left + 130.781250) * 7162 / 39.34135
+        x2 = (self.coordinates.lon_right + 130.781250) * 7162 / 39.34135
         # Use another ratio of a known location to find the latitudes
         den = MapManager.LAT_MAX - MapManager.REF_LAT
         y1 = lin_lat_top * 3565 / den
