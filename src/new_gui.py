@@ -227,6 +227,16 @@ class Root(tkinter.Tk):
         self.nrsc5 = None
         # Schedule timed event handler
         self.after(str(self.EVENT_UPDATE_INTERVAL), self.update_event_handler)
+        # Delete event handler
+        self.protocol('WM_DELETE_WINDOW', self.stop)
+
+    def stop(self):
+        """
+        Stop everything and close window.
+        """
+        if self.nrsc5 is not None:
+            self.nrsc5.stop()
+        self.destroy()
 
     def update_event_handler(self):
         """
@@ -297,6 +307,9 @@ class Root(tkinter.Tk):
         """
         Stop NRSC5 program
         """
+        # Do nothing if not already running
+        if self.nrsc5 is None:
+            return
         # Enable tuning fields
         self.station_settings_widget.set_visibility(True)
         self.nrsc5.stop()
