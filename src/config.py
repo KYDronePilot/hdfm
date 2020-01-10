@@ -6,6 +6,41 @@ import shutil
 from pathlib import Path
 from typing import List, Any, ClassVar
 import tempfile
+from appdirs import AppDirs
+
+
+class ApplicationDirectories(AppDirs):
+    """
+    AppDirs wrapper.
+    """
+
+    @property
+    def user_data_dir(self) -> Path:
+        return Path(super().user_data_dir)
+
+    @property
+    def site_data_dir(self) -> Path:
+        return Path(super().site_data_dir)
+
+    @property
+    def user_config_dir(self) -> Path:
+        return Path(super().user_config_dir)
+
+    @property
+    def site_config_dir(self) -> Path:
+        return Path(super().site_config_dir)
+
+    @property
+    def user_cache_dir(self) -> Path:
+        return Path(super().user_cache_dir)
+
+    @property
+    def user_state_dir(self) -> Path:
+        return Path(super().user_state_dir)
+
+    @property
+    def user_log_dir(self) -> Path:
+        return Path(super().user_log_dir)
 
 
 class ConfigEntry:
@@ -112,8 +147,8 @@ class UserConfig(Config):
     ppm: ConfigEntry
     device: ConfigEntry
 
-    def __init__(self):
-        super().__init__(Path(__file__).parent.parent / Path('hdfm_config.json'))
+    def __init__(self, config_file: Path):
+        super().__init__(config_file)
         self.gain = ConfigEntry(key='gain', value='auto')
         self.ppm = ConfigEntry(key='ppm', value='0')
         self.device = ConfigEntry(key='device', value='0')
@@ -125,10 +160,18 @@ class UserConfig(Config):
         ]
 
 
+# Setup config dirs
+dirs = ApplicationDirectories(appname='hdfm', appauthor='kydronepilot', version='0.0.1')
+config_dir = dirs.user_config_dir
+# Create if not exists
+if not config_dir.exists():
+    config_dir.mkdir(parents=True)
+
+
 static_config = StaticConfig()
 static_config.setup()
 
-user_config = UserConfig()
+user_config = UserConfig(config_dir / Path('config.json'))
 # Try to load config, leaving defaults if doesn't exist
 try:
     user_config.load_config()
