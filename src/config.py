@@ -16,7 +16,7 @@ class ConfigEntry:
     key: str
     value: Any
 
-    def __init__(self, key: str, value: Any):
+    def __init__(self, key: str, value: Any = None):
         self.key = key
         self.value = value
 
@@ -56,7 +56,7 @@ class Config:
         Load the config into memory.
         """
         if not self.file.exists():
-            raise Exception(f'Config file "{self.file}" does not exist.')
+            raise FileNotFoundError(f'Config file "{self.file}" does not exist.')
         with self.file.open() as fp:
             config_map = json.load(fp)
 
@@ -108,9 +108,29 @@ class UserConfig(Config):
     User-changeable config items.
     """
 
+    gain: ConfigEntry
+    ppm: ConfigEntry
+    device: ConfigEntry
+
     def __init__(self):
         super().__init__(Path(__file__).parent.parent / Path('hdfm_config.json'))
+        self.gain = ConfigEntry(key='gain', value='auto')
+        self.ppm = ConfigEntry(key='ppm', value='0')
+        self.device = ConfigEntry(key='device', value='0')
+
+        self.all_items = [
+            self.gain,
+            self.ppm,
+            self.device
+        ]
 
 
 static_config = StaticConfig()
 static_config.setup()
+
+user_config = UserConfig()
+# Try to load config, leaving defaults if doesn't exist
+try:
+    user_config.load_config()
+except FileNotFoundError:
+    pass
