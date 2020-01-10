@@ -460,7 +460,82 @@ class InfoFrame(ttk.LabelFrame):
         self.sep1.pack(side=tkinter.TOP, padx=4, pady=10, fill=tkinter.X)
 
 
-class SettingsFrame(ttk.LabelFrame):
+class InputField:
+    """
+    An input field, used in an input form.
+
+    Attributes:
+        label_elem: Label element
+        input_elem: Input element
+        input_var: Input variable
+    """
+
+    label_elem: ttk.Label
+    input_elem: ttk.Widget
+    input_var: tkinter.Variable
+
+    def __init__(
+        self,
+        form: 'Form',
+        input_elem: ttk.Widget,
+        input_var: tkinter.Variable,
+        label: str,
+    ):
+        # Setup label
+        self.label_elem = ttk.Label(
+            master=form.label_frame, text=f'{label}:', justify=tkinter.RIGHT
+        )
+        self.label_elem.pack(side=tkinter.TOP, anchor='e')
+        # Setup input
+        self.input_elem = input_elem
+        self.input_elem.pack(side=tkinter.TOP, fill=tkinter.X, anchor='w')
+        self.input_var = input_var
+
+    def set_visibility(self, visible: bool):
+        """
+        Set visibility of field.
+
+        Args:
+            visible: Whether field is visible
+        """
+        self.input_elem.configure(state=tkinter.NORMAL if visible else tkinter.DISABLED)
+
+
+class Form(ttk.LabelFrame):
+    """
+    An input form that auto-organizes the input items.
+
+    Attributes:
+        label_input_frame: Frame for containing label and input frames
+        label_frame: Frame in which labels are placed
+        input_frame: Frame in which inputs are placed
+        submit_button: Button to submit form
+    """
+
+    label_input_frame: ttk.Frame
+    label_frame: ttk.Frame
+    input_frame: ttk.Frame
+    submit_button: ttk.Button
+
+    def __init__(
+        self, master: Any, name: str, on_submit: Callable, submit_text: str = 'Submit'
+    ):
+        super().__init__(master=master, text=name)
+        # Setup container frame
+        self.label_input_frame = ttk.Frame(master=self)
+        self.label_input_frame.pack(side=tkinter.TOP, fill=tkinter.Y, expand=True)
+        # Setup label frame
+        self.label_frame = ttk.Frame(master=self.label_input_frame)
+        self.label_frame.pack(side=tkinter.LEFT, fill=tkinter.Y, expand=True)
+        # Setup input frame
+        self.input_frame = ttk.Frame(master=self.label_input_frame)
+        self.input_frame.pack(side=tkinter.LEFT, fill=tkinter.Y, expand=True)
+        # Setup submit button
+        self.submit_button = ttk.Button(self, text=submit_text, command=on_submit)
+        self.submit_button.pack(side=tkinter.BOTTOM, anchor='center')
+
+
+class SettingsFrame(Form):
     """
     Frame for displaying settings.
     """
@@ -472,7 +547,9 @@ class SettingsFrame(ttk.LabelFrame):
     submit_button: Any
 
     def __init__(self, master: MainTabContainer, state: State):
-        super().__init__(master, text='Settings')
+        super().__init__(
+            master, name='Settings', on_submit=self.save, submit_text='Save'
+        )
         self.state_vars = state
         # Gain input
         self.gain = DropdownInput(
@@ -481,7 +558,6 @@ class SettingsFrame(ttk.LabelFrame):
             label='Gain',
             input_var=self.state_vars.gain,
         )
-        self.gain.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
         # PPM error input
         self.ppm_error = DropdownInput(
             self,
@@ -489,7 +565,6 @@ class SettingsFrame(ttk.LabelFrame):
             label='PPM Error Correction',
             input_var=self.state_vars.ppm_error,
         )
-        self.ppm_error.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
         # Device input
         self.device = DropdownInput(
             self,
@@ -497,10 +572,6 @@ class SettingsFrame(ttk.LabelFrame):
             label='Device Index',
             input_var=self.state_vars.device,
         )
-        self.device.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
-        # Submit button
-        self.submit_button = ttk.Button(self, text='Save', command=self.save)
-        self.submit_button.pack(padx=4, pady=10, anchor='w')
 
     def save(self):
         """
@@ -557,7 +628,6 @@ class TrafficFrame(ttk.LabelFrame):
         self.after(str(Root.EVENT_UPDATE_INTERVAL), self.update_event_handler)
         self.traffic_panel = ImagePanel(self, (50, 50))
         self.traffic_map_manager = TrafficMapManager()
-        # self.traffic_panel.image = Image.open('/tmp/hdfm_dump/748_TMT_03g65g_1_2_20191227_2144_02ec.png')
 
     def update_event_handler(self):
         """
@@ -598,42 +668,26 @@ class SettingsInput(ttk.Frame):
         self.input_elem.configure(state=tkinter.NORMAL if visible else tkinter.DISABLED)
 
 
-class DropdownInput(ttk.Frame):
+class DropdownInput(InputField):
     """
     Dropdown input.
     """
 
-    label: ttk.Label
-    input_elem: tkinter.OptionMenu
-    input_var: tkinter.StringVar
     options: List[str]
 
     def __init__(
         self,
-        master: Any,
+        form: Form,
         options: List[str],
         label: str,
         input_var: tkinter.StringVar,
         default=None,
     ):
-        super().__init__(master)
-        self.input_var = input_var
         self.options = options
-        # Label
-        self.label = ttk.Label(self, text=f'{label}:', justify=tkinter.LEFT)
-        self.label.pack(side=tkinter.TOP, anchor='w')
-        # Input
-        self.input_elem = ttk.OptionMenu(self, self.input_var, default, *self.options)
-        self.input_elem.pack(side=tkinter.TOP, anchor='w')
-
-    def set_visibility(self, visible: bool):
-        """
-        Set visibility of field.
-
-        Args:
-            visible: Whether field is visible
-        """
-        self.input_elem.configure(state=tkinter.NORMAL if visible else tkinter.DISABLED)
+        input_elem = ttk.OptionMenu(form.input_frame, input_var, default, *self.options)
+        super().__init__(
+            form=form, input_elem=input_elem, input_var=input_var, label=label
+        )
 
 
 class KeyValuePanel(ttk.Frame):
@@ -656,7 +710,7 @@ class KeyValuePanel(ttk.Frame):
         self.value.pack(side=tkinter.LEFT)
 
 
-class StationSettingWidget(ttk.LabelFrame):
+class StationSettingWidget(Form):
     """
     Widget for setting the current radio station to tune to.
     """
@@ -666,7 +720,9 @@ class StationSettingWidget(ttk.LabelFrame):
     program: DropdownInput
 
     def __init__(self, master: Root, state: State):
-        super().__init__(master, text='Tune Station')
+        super().__init__(
+            master, name='Tune Station', on_submit=lambda: None, submit_text=''
+        )
         self.state_vars = state
         # Frequency input
         self.frequency = DropdownInput(
@@ -675,7 +731,6 @@ class StationSettingWidget(ttk.LabelFrame):
             label='Frequency',
             input_var=self.state_vars.frequency,
         )
-        self.frequency.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
         # Program input
         self.program = DropdownInput(
             self,
@@ -683,7 +738,6 @@ class StationSettingWidget(ttk.LabelFrame):
             label='Program',
             input_var=self.state_vars.program,
         )
-        self.program.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
 
     def set_visibility(self, visible: bool):
         """
