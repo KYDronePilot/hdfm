@@ -73,7 +73,9 @@ class ImagePanel(tkinter.Label):
             image: New image to set
         """
         self._original_image = image.copy()
-        self._current_image = self._original_image.resize(self._current_image.size, Image.ANTIALIAS)
+        self._current_image = self._original_image.resize(
+            self._current_image.size, Image.ANTIALIAS
+        )
         # Reload image on display
         self.reload_image()
 
@@ -113,7 +115,9 @@ class ImagePanel(tkinter.Label):
         else:
             new_h = (old_h * new_w) // old_w
         # Resize
-        self._current_image = self._original_image.resize((new_w, new_h), Image.ANTIALIAS)
+        self._current_image = self._original_image.resize(
+            (new_w, new_h), Image.ANTIALIAS
+        )
         self.reload_image()
 
     @property
@@ -235,10 +239,14 @@ class Root(tkinter.Tk):
         """
         Setup components in root window.
         """
-        self.toolbar = Toolbar(self, self.state_vars, self.handle_play_click, self.stop_nrsc5)
+        self.toolbar = Toolbar(
+            self, self.state_vars, self.handle_play_click, self.stop_nrsc5
+        )
         self.tab_container = MainTabContainer(self, self.state_vars)
         self.station_settings_widget = StationSettingWidget(self, self.state_vars)
-        self.station_settings_widget.pack(side=tkinter.TOP, padx=5, pady=5, fill=tkinter.X)
+        self.station_settings_widget.pack(
+            side=tkinter.TOP, padx=5, pady=5, fill=tkinter.X
+        )
         self.info_widget = InfoWidget(self, self.state_vars)
         self.info_widget.pack(side=tkinter.TOP, padx=5, pady=5, fill=tkinter.X)
 
@@ -262,11 +270,21 @@ class Root(tkinter.Tk):
         # Exit if not running
         if self.nrsc5 is None:
             return
-        self._update_var_from_parser_queue(self.nrsc5.log_parser.artist, self.state_vars.artist)
-        self._update_var_from_parser_queue(self.nrsc5.log_parser.title, self.state_vars.title)
-        self._update_var_from_parser_queue(self.nrsc5.log_parser.slogan, self.state_vars.slogan)
-        self._update_var_from_parser_queue(self.nrsc5.log_parser.station_name, self.state_vars.station_name)
-        self._update_var_from_parser_queue(self.nrsc5.log_parser.bit_rate, self.state_vars.audio_bit_rate)
+        self._update_var_from_parser_queue(
+            self.nrsc5.log_parser.artist, self.state_vars.artist
+        )
+        self._update_var_from_parser_queue(
+            self.nrsc5.log_parser.title, self.state_vars.title
+        )
+        self._update_var_from_parser_queue(
+            self.nrsc5.log_parser.slogan, self.state_vars.slogan
+        )
+        self._update_var_from_parser_queue(
+            self.nrsc5.log_parser.station_name, self.state_vars.station_name
+        )
+        self._update_var_from_parser_queue(
+            self.nrsc5.log_parser.bit_rate, self.state_vars.audio_bit_rate
+        )
 
     def start_nrsc5(self):
         """
@@ -293,8 +311,11 @@ class Root(tkinter.Tk):
         if self.state_vars.frequency.get() == '' or self.state_vars.program.get() == '':
             return
         # Ensure settings are set
-        if self.state_vars.ppm_error.get() == '' or self.state_vars.device.get() == '' or self.state_vars.gain.get() \
-                == '':
+        if (
+            self.state_vars.ppm_error.get() == ''
+            or self.state_vars.device.get() == ''
+            or self.state_vars.gain.get() == ''
+        ):
             return
         # Disable tuning fields
         self.station_settings_widget.set_visibility(False)
@@ -305,6 +326,7 @@ class Toolbar(tkinter.Frame):
     """
     Toolbar in UI.
     """
+
     state_vars: State
     play_image: Any
     play_image_elem: Any
@@ -317,19 +339,25 @@ class Toolbar(tkinter.Frame):
     gear_image_elem: Any
     gear_button: Any
 
-    def __init__(self, master: Root, state: State, play_handler: Callable, stop_handler: Callable):
+    def __init__(
+        self, master: Root, state: State, play_handler: Callable, stop_handler: Callable
+    ):
         super().__init__(master, bd=1, relief=tkinter.RAISED)
         self.pack(side=tkinter.TOP, fill=tkinter.X)
         self.state_vars = state
         # Play button
         self.play_image = Image.open('icons/play.png')
         self.play_image_elem = ImageTk.PhotoImage(self.play_image)
-        self.play_button = tkinter.Button(self, image=self.play_image_elem, relief=tkinter.FLAT, command=play_handler)
+        self.play_button = tkinter.Button(
+            self, image=self.play_image_elem, relief=tkinter.FLAT, command=play_handler
+        )
         self.play_button.pack(side=tkinter.LEFT, padx=2, pady=2)
         # Stop button
         self.stop_image = Image.open('icons/stop.png')
         self.stop_image_elem = ImageTk.PhotoImage(self.stop_image)
-        self.stop_button = tkinter.Button(self, image=self.stop_image_elem, relief=tkinter.FLAT, command=stop_handler)
+        self.stop_button = tkinter.Button(
+            self, image=self.stop_image_elem, relief=tkinter.FLAT, command=stop_handler
+        )
         self.stop_button.pack(side=tkinter.LEFT, padx=2, pady=2)
         # Separator
         self.sep1 = ttk.Separator(self, orient=tkinter.VERTICAL)
@@ -337,7 +365,9 @@ class Toolbar(tkinter.Frame):
         # Gear button
         self.gear_image = Image.open('icons/gear.png')
         self.gear_image_elem = ImageTk.PhotoImage(self.gear_image)
-        self.gear_button = tkinter.Button(self, image=self.gear_image_elem, relief=tkinter.FLAT)
+        self.gear_button = tkinter.Button(
+            self, image=self.gear_image_elem, relief=tkinter.FLAT
+        )
         self.gear_button.pack(side=tkinter.LEFT, padx=2, pady=2)
 
 
@@ -390,6 +420,7 @@ class InfoFrame(ttk.LabelFrame):
     """
     Frame for displaying Station info.
     """
+
     state_vars: State
     station_name: Any
     station_slogan: Any
@@ -407,7 +438,9 @@ class InfoFrame(ttk.LabelFrame):
         self.station_slogan = KeyValuePanel(self, 'Slogan', self.state_vars.slogan)
         self.station_slogan.pack(side=tkinter.TOP, fill=tkinter.X, pady=10, padx=10)
         # Audio bit rate
-        self.audio_bit_rate = KeyValuePanel(self, 'Bit Rate', self.state_vars.audio_bit_rate)
+        self.audio_bit_rate = KeyValuePanel(
+            self, 'Bit Rate', self.state_vars.audio_bit_rate
+        )
         self.audio_bit_rate.pack(side=tkinter.TOP, fill=tkinter.X, pady=10, padx=10)
         # Divider
         self.sep1 = ttk.Separator(self, orient=tkinter.HORIZONTAL)
@@ -418,6 +451,7 @@ class SettingsFrame(ttk.LabelFrame):
     """
     Frame for displaying settings.
     """
+
     state_vars: State
     gain: 'DropdownInput'
     ppm_error: 'DropdownInput'
@@ -428,16 +462,28 @@ class SettingsFrame(ttk.LabelFrame):
         super().__init__(master, text='Settings')
         self.state_vars = state
         # Gain input
-        self.gain = DropdownInput(self, options=['auto'] + [str(gain) for gain in get_all_gain_levels()], label='Gain',
-                                  input_var=self.state_vars.gain)
+        self.gain = DropdownInput(
+            self,
+            options=['auto'] + [str(gain) for gain in get_all_gain_levels()],
+            label='Gain',
+            input_var=self.state_vars.gain,
+        )
         self.gain.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
         # PPM error input
-        self.ppm_error = DropdownInput(self, options=[str(i) for i in range(-1000, 1001)], label='PPM Error Correction',
-                                       input_var=self.state_vars.ppm_error)
+        self.ppm_error = DropdownInput(
+            self,
+            options=[str(i) for i in range(-1000, 1001)],
+            label='PPM Error Correction',
+            input_var=self.state_vars.ppm_error,
+        )
         self.ppm_error.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
         # Device input
-        self.device = DropdownInput(self, options=[str(i) for i in range(0, 256)], label='Device Index',
-                                    input_var=self.state_vars.device)
+        self.device = DropdownInput(
+            self,
+            options=[str(i) for i in range(0, 256)],
+            label='Device Index',
+            input_var=self.state_vars.device,
+        )
         self.device.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
         # Submit button
         self.submit_button = ttk.Button(self, text='Save', command=self.save)
@@ -514,6 +560,7 @@ class SettingsInput(ttk.Frame):
     """
     Settings input item with label.
     """
+
     label: Any
     input_elem: tkinter.Entry
     input_var: tkinter.StringVar
@@ -548,7 +595,14 @@ class DropdownInput(ttk.Frame):
     input_var: tkinter.StringVar
     options: List[str]
 
-    def __init__(self, master: Any, options: List[str], label: str, input_var: tkinter.StringVar, default=None):
+    def __init__(
+        self,
+        master: Any,
+        options: List[str],
+        label: str,
+        input_var: tkinter.StringVar,
+        default=None,
+    ):
         super().__init__(master)
         self.input_var = input_var
         self.options = options
@@ -602,12 +656,20 @@ class StationSettingWidget(ttk.LabelFrame):
         super().__init__(master, text='Tune Station')
         self.state_vars = state
         # Frequency input
-        self.frequency = DropdownInput(self, options=[str(freq) for freq in FM_FREQUENCIES], label='Frequency',
-                                       input_var=self.state_vars.frequency)
+        self.frequency = DropdownInput(
+            self,
+            options=[str(freq) for freq in FM_FREQUENCIES],
+            label='Frequency',
+            input_var=self.state_vars.frequency,
+        )
         self.frequency.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
         # Program input
-        self.program = DropdownInput(self, options=[str(i) for i in range(1, 5)], label='Program',
-                                     input_var=self.state_vars.program)
+        self.program = DropdownInput(
+            self,
+            options=[str(i) for i in range(1, 5)],
+            label='Program',
+            input_var=self.state_vars.program,
+        )
         self.program.pack(padx=4, pady=10, fill=tkinter.X, anchor='w')
 
     def set_visibility(self, visible: bool):
