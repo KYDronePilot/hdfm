@@ -233,6 +233,18 @@ class LogParserQueue(queue.Queue):
         """
         raise NotImplementedError()
 
+    def get_newest(self) -> str:
+        """
+        Get the newest item parsed, discarding older ones.
+
+        Returns:
+            Newest item parsed or None if none
+        """
+        item = None
+        while not self.empty():
+            item = self.get()
+        return item
+
 
 class ArtistParserQueue(LogParserQueue):
     def parse(self, line: str) -> Optional[str]:
