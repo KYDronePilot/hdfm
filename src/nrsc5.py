@@ -72,7 +72,9 @@ class BooleanArg(Arg):
     _value: bool
     _flag: str
 
-    def __init__(self, name: str, flag: str, description: str = '', default: bool = False):
+    def __init__(
+        self, name: str, flag: str, description: str = '', default: bool = False
+    ):
         super().__init__(name, description)
         self._value = default
         self._flag = flag
@@ -100,7 +102,9 @@ class KeyValArg(Arg):
     value: Optional[str]
     _is_required: bool
 
-    def __init__(self, name: str, flag: str, description: str = '', is_required: bool = False):
+    def __init__(
+        self, name: str, flag: str, description: str = '', is_required: bool = False
+    ):
         super().__init__(name, description)
         self._flag = flag
         self.value = None
@@ -110,7 +114,9 @@ class KeyValArg(Arg):
         # Ensure value provided if required
         if self.value is None:
             if self._is_required:
-                raise Exception(f'Value for "{self._flag}" not provided, but is required.')
+                raise Exception(
+                    f'Value for "{self._flag}" not provided, but is required.'
+                )
             return []
         return [self._flag, self.value]
 
@@ -145,7 +151,9 @@ class PositionalArg(Arg):
         # Ensure value provided if required
         if self._value is None:
             if self._is_required:
-                raise Exception(f'Value for "{self.name}" positional argument not provided')
+                raise Exception(
+                    f'Value for "{self.name}" positional argument not provided'
+                )
             return []
         return [self._value]
 
@@ -302,7 +310,13 @@ class NRSC5LogParser(threading.Thread):
     slogan: SloganParserQueue
     station_name: StationNameParserQueue
     bit_rate: BitRateParserQueue
-    queues: Tuple[ArtistParserQueue, TitleParserQueue, SloganParserQueue, StationNameParserQueue, BitRateParserQueue]
+    queues: Tuple[
+        ArtistParserQueue,
+        TitleParserQueue,
+        SloganParserQueue,
+        StationNameParserQueue,
+        BitRateParserQueue,
+    ]
     _stop_event: threading.Event
 
     def __init__(self, stream: IO[Union[str, bytes]]):
@@ -313,7 +327,13 @@ class NRSC5LogParser(threading.Thread):
         self.slogan = SloganParserQueue()
         self.station_name = StationNameParserQueue()
         self.bit_rate = BitRateParserQueue()
-        self.queues = (self.artist, self.title, self.slogan, self.station_name, self.bit_rate)
+        self.queues = (
+            self.artist,
+            self.title,
+            self.slogan,
+            self.station_name,
+            self.bit_rate,
+        )
         self._stop_event = threading.Event()
 
     def handle_line(self, line: str):
@@ -357,6 +377,7 @@ class NRSC5Program:
         log_parser: Log parser
         (Args omitted)
     """
+
     exec_path: Path
     process: Optional[subprocess.Popen]
     log_parser: Optional[NRSC5LogParser]
@@ -383,36 +404,51 @@ class NRSC5Program:
         self.process = None
         self.log_parser = None
 
-        self.version = BooleanArg(name='Version', flag='-v', description='print the version number and exit')
-        self.q = BooleanArg(name='Logout output', flag='-q', description='disable log output')
+        self.version = BooleanArg(
+            name='Version', flag='-v', description='print the version number and exit'
+        )
+        self.q = BooleanArg(
+            name='Logout output', flag='-q', description='disable log output'
+        )
         self.log_level = KeyValArg(
             name='Log Level',
             flag='-l',
-            description='set log level (1 = DEBUG, 2 = INFO, 3 = WARN)'
+            description='set log level (1 = DEBUG, 2 = INFO, 3 = WARN)',
         )
-        self.device_index = KeyValArg(name='Device Index', flag='-d', description='rtl-sdr device')
-        self.ppm_error = KeyValArg(name='PPM Error', flag='-p', description='rtl-sdr ppm error')
+        self.device_index = KeyValArg(
+            name='Device Index', flag='-d', description='rtl-sdr device'
+        )
+        self.ppm_error = KeyValArg(
+            name='PPM Error', flag='-p', description='rtl-sdr ppm error'
+        )
         self.gain = KeyValArg(
             name='Gain',
             flag='-g',
-            description='gain (example: 49.6) (automatic gain selection if not specified)'
+            description='gain (example: 49.6) (automatic gain selection if not specified)',
         )
-        self.iq_input = KeyValArg(name='IQ Input', flag='-r', description='read IQ samples from input file')
-        self.iq_output = KeyValArg(name='IQ Output', flag='-w', description='write IQ samples to output file')
-        self.wav_output = KeyValArg(name='WAV Output', flag='-o', description='write audio to output WAV file')
-        self.hdc_output = KeyValArg(name='Dump HDC', flag='--dump-hdc', description='dump HDC packets')
+        self.iq_input = KeyValArg(
+            name='IQ Input', flag='-r', description='read IQ samples from input file'
+        )
+        self.iq_output = KeyValArg(
+            name='IQ Output', flag='-w', description='write IQ samples to output file'
+        )
+        self.wav_output = KeyValArg(
+            name='WAV Output', flag='-o', description='write audio to output WAV file'
+        )
+        self.hdc_output = KeyValArg(
+            name='Dump HDC', flag='--dump-hdc', description='dump HDC packets'
+        )
         self.aas_output = KeyValArg(
             name='Dump AAS Files',
             flag='--dump-aas-files',
-            description='dump AAS files (WARNING: insecure)'
+            description='dump AAS files (WARNING: insecure)',
         )
         self.frequency = PositionalArg(
             name='Frequency',
-            description='center frequency in MHz or Hz (do not provide frequency when reading from file)'
+            description='center frequency in MHz or Hz (do not provide frequency when reading from file)',
         )
         self.program = PositionalArg(
-            name='Program',
-            description='audio program to decode (0, 1, 2, or 3)'
+            name='Program', description='audio program to decode (0, 1, 2, or 3)'
         )
 
     @staticmethod
@@ -453,16 +489,18 @@ class NRSC5Program:
                 self.iq_output,
                 self.wav_output,
                 self.hdc_output,
-                self.aas_output
+                self.aas_output,
             ]
         )
         positional_args = Arg.format_multiple_args([self.frequency, self.program])
-        return list(chain(
-            [str(self.exec_path.absolute())],
-            boolean_args,
-            key_val_args,
-            positional_args
-        ))
+        return list(
+            chain(
+                [str(self.exec_path.absolute())],
+                boolean_args,
+                key_val_args,
+                positional_args,
+            )
+        )
 
     def config_iq_read(self, iq_file: Path, program: int):
         """
@@ -480,12 +518,12 @@ class NRSC5Program:
         self.program.set_arg(str(program))
 
     def config_channel_tune(
-            self,
-            freq: float,
-            program: int,
-            device_index: Optional[int] = None,
-            ppm_error: Optional[int] = None,
-            gain: Optional[float] = None
+        self,
+        freq: float,
+        program: int,
+        device_index: Optional[int] = None,
+        ppm_error: Optional[int] = None,
+        gain: Optional[float] = None,
     ):
         """
         Configure NRSC5 to tune rtl-sdr to a particular frequency.
@@ -520,9 +558,7 @@ class NRSC5Program:
         """
         args = self._get_args_list()
         self.process = subprocess.Popen(
-            args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         self.log_parser = NRSC5LogParser(self.process.stderr)
         self.log_parser.start()

@@ -1,7 +1,6 @@
 import os.path
 from os.path import dirname, abspath
 
-
 # Directory of module.
 DIR = dirname(dirname(abspath(__file__)))
 # Paths to files in this project.

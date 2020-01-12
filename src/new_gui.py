@@ -3,22 +3,21 @@ Temporary module for designing new UI.
 """
 
 import tkinter
-from glob import glob
 from pathlib import Path
 from tkinter import ttk
-from typing import Any, Optional, ClassVar, List, Callable
 from tkinter.filedialog import askopenfilename
+from typing import Any, Optional, ClassVar, List, Callable
 
 from PIL import Image, ImageTk
 from PIL.Image import Image as ImageType
 
 from artwork import ArtworkManager
-from consts import FM_FREQUENCIES
-from radar_map import DopplerRadarManager
-from traffic import TrafficMapManager, TrafficTile
 from config import static_config, user_config
+from consts import FM_FREQUENCIES
 from map_manager import MapManager
 from nrsc5 import NRSC5Program, LogParserQueue
+from radar_map import DopplerRadarManager
+from traffic import TrafficMapManager
 
 # from map_manager import MapManager
 from utils import get_all_gain_levels
@@ -382,6 +381,7 @@ class Toolbar(tkinter.Frame):
     stop_image: Any
     stop_image_elem: Any
     stop_button: Any
+
     # sep1: Any
 
     def __init__(
@@ -543,7 +543,7 @@ class InputField:
         input_elem: ttk.Widget,
         input_var: tkinter.Variable,
         label: str,
-        label_pad_y: int = 5
+        label_pad_y: int = 5,
     ):
         # Setup label
         self.label_elem = ttk.Label(
@@ -656,7 +656,11 @@ class FileInput(InputField):
         input_elem = FileInputElement(form.input_frame, input_var)
         input_elem.configure(state=tkinter.DISABLED)
         super().__init__(
-            form=form, input_elem=input_elem, input_var=input_var, label=label, label_pad_y=7
+            form=form,
+            input_elem=input_elem,
+            input_var=input_var,
+            label=label,
+            label_pad_y=7,
         )
 
     def set_visibility(self, visible: bool):
@@ -820,7 +824,11 @@ class DropdownInput(InputField):
         self.options = options
         input_elem = ttk.OptionMenu(form.input_frame, input_var, default, *self.options)
         super().__init__(
-            form=form, input_elem=input_elem, input_var=input_var, label=label, label_pad_y=7
+            form=form,
+            input_elem=input_elem,
+            input_var=input_var,
+            label=label,
+            label_pad_y=7,
         )
 
 

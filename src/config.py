@@ -3,9 +3,10 @@ Configuration management.
 """
 import json
 import shutil
+import tempfile
 from pathlib import Path
 from typing import List, Any, ClassVar
-import tempfile
+
 from appdirs import AppDirs
 
 
@@ -98,7 +99,9 @@ class Config:
         for item in self.all_items:
             # Ensure item is in config
             if item.key not in config_map:
-                raise Exception(f'Config key "{item.key}" not in config file "{self.file}".')
+                raise Exception(
+                    f'Config key "{item.key}" not in config file "{self.file}".'
+                )
             item.set(config_map[item.key])
             del config_map[item.key]
         # Ensure no extra config items
@@ -119,7 +122,9 @@ class StaticConfig:
     """
 
     project_root: ClassVar[Path] = Path(__file__).parent.parent
-    font_file: ClassVar[Path] = project_root / Path('font') / Path('GlacialIndifference-Regular.otf')
+    font_file: ClassVar[Path] = project_root / Path('font') / Path(
+        'GlacialIndifference-Regular.otf'
+    )
     main_map_file: ClassVar[Path] = project_root / Path('maps') / Path('us_map.png')
     dump_directory: ClassVar[Path] = Path(tempfile.gettempdir()) / Path('nrsc5_dump')
     cache_directory: ClassVar[Path] = Path(tempfile.gettempdir()) / Path('nrsc5_cache')
@@ -155,11 +160,7 @@ class UserConfig(Config):
         self.ppm = ConfigEntry(key='ppm', value='0')
         self.device = ConfigEntry(key='device', value='0')
 
-        self.all_items = [
-            self.gain,
-            self.ppm,
-            self.device
-        ]
+        self.all_items = [self.gain, self.ppm, self.device]
 
 
 # Setup config dirs
@@ -168,7 +169,6 @@ config_dir = dirs.user_config_dir
 # Create if not exists
 if not config_dir.exists():
     config_dir.mkdir(parents=True)
-
 
 static_config = StaticConfig()
 static_config.setup()

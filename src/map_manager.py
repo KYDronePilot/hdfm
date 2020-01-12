@@ -102,7 +102,9 @@ class Coordinates(IHeartRadioConfigEntry):
     key = 'Coordinates'
     value: Tuple[Tuple[float, float], Tuple[float, float]]
 
-    def parse(self, value: List[str]) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+    def parse(
+        self, value: List[str]
+    ) -> Tuple[Tuple[float, float], Tuple[float, float]]:
         if len(value) != 2:
             raise Exception(f'Coordinates "{value}" in config are malformed.')
         lat_top, lon_left = value[0][1:-1].split(',')
@@ -241,12 +243,7 @@ class MapManager:
         y1 = lin_lat_top * 3565 / den
         y2 = lin_lat_bottom * 3565 / den
         # Crop the map.
-        cropped = main_map.crop((
-            int(x1),
-            int(y1),
-            int(x2),
-            int(y2)
-        ))
+        cropped = main_map.crop((int(x1), int(y1), int(x2), int(y2)))
         # Crop and resize the map
         return cropped.resize((900, 900)).convert('RGBA')
 
