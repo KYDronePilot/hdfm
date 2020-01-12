@@ -382,10 +382,7 @@ class Toolbar(tkinter.Frame):
     stop_image: Any
     stop_image_elem: Any
     stop_button: Any
-    sep1: Any
-    gear_image: Any
-    gear_image_elem: Any
-    gear_button: Any
+    # sep1: Any
 
     def __init__(
         self, master: Root, state: State, play_handler: Callable, stop_handler: Callable
@@ -408,15 +405,8 @@ class Toolbar(tkinter.Frame):
         )
         self.stop_button.pack(side=tkinter.LEFT, padx=2, pady=2)
         # Separator
-        self.sep1 = ttk.Separator(self, orient=tkinter.VERTICAL)
-        self.sep1.pack(side=tkinter.LEFT, padx=4, pady=3, fill=tkinter.Y)
-        # Gear button
-        self.gear_image = Image.open('icons/gear.png')
-        self.gear_image_elem = ImageTk.PhotoImage(self.gear_image)
-        self.gear_button = tkinter.Button(
-            self, image=self.gear_image_elem, relief=tkinter.FLAT
-        )
-        self.gear_button.pack(side=tkinter.LEFT, padx=2, pady=2)
+        # self.sep1 = ttk.Separator(self, orient=tkinter.VERTICAL)
+        # self.sep1.pack(side=tkinter.LEFT, padx=4, pady=3, fill=tkinter.Y)
 
 
 class Notebook(ttk.Notebook):
@@ -479,7 +469,7 @@ class MainTabContainer(Notebook):
         self.add(self.traffic_tab, text='Traffic')
 
 
-class AlbumArtFrame(ttk.Frame):
+class AlbumArtFrame(ttk.LabelFrame):
     """
     Frame for displaying album art.
     """
@@ -487,8 +477,19 @@ class AlbumArtFrame(ttk.Frame):
     state_vars: State
 
     def __init__(self, master: MainTabContainer, state: State):
-        super().__init__(master)
+        super().__init__(master, text='Artwork')
         self.state_vars = state
+        self.after(str(Root.EVENT_UPDATE_INTERVAL), self.refresh_artwork)
+        self.artwork_panel = ImagePanel(self, (20, 20))
+        self.artwork_manager = ArtworkManager()
+
+    def refresh_artwork(self):
+        """
+        Refresh artwork being displayed.
+        """
+        if self.artwork_manager.update_artwork():
+            self.artwork_panel.image = self.artwork_manager.image
+        self.after(str(Root.EVENT_UPDATE_INTERVAL), self.refresh_artwork)
 
 
 class InfoFrame(ttk.LabelFrame):

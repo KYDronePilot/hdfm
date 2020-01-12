@@ -1,7 +1,9 @@
-from typing import BinaryIO
+from typing import Optional
 
 from PIL import Image
 from PIL.Image import Image as ImageType
+
+from config import static_config
 
 
 class ArtworkManager:
@@ -10,30 +12,31 @@ class ArtworkManager:
 
     Attributes:
         _image: The artwork image
-        filename: Name of artwork image file
     """
 
-    _image: ImageType
-    filename: str
+    _image: Optional[ImageType]
 
-    def __init__(self, image: ImageType, filename: str):
+    def __init__(self, image: Optional[ImageType] = None):
         self._image = image
-        self.filename = filename
 
-    @classmethod
-    def load_image(cls, fp: BinaryIO, filename: str) -> 'ArtworkManager':
+    def update_artwork(self) -> bool:
         """
-        Load an artwork image from a file handle.
-
-        Args:
-            fp: File handle
-            filename: Name of file
+        Search for new artwork image and update if available.
 
         Returns:
-            New artwork instance
+            Whether artwork was updated
         """
-        image = Image.open(fp).convert('RGBA')
-        return cls(image, filename)
+        files = list(static_config.dump_directory.glob('*.jpg'))
+        # Ensure one exists
+        if len(files) == 0:
+            return False
+        # Update with first artwork file, ignoring others
+        with files[0].open('rb') as fp:
+            self.image = Image.open(fp).convert('RGBA')
+        # Delete other files
+        for file in files:
+            file.unlink()
+        return True
 
     @property
     def image(self) -> ImageType:
