@@ -452,15 +452,15 @@ class MainTabContainer(Notebook):
         super().__init__(master)
         self.pack(side=tkinter.TOP, padx=5, pady=5, fill=tkinter.X)
         self.state_vars = state
-        # Art tab
-        self.art_tab = AlbumArtFrame(self, self.state_vars)
-        self.add(self.art_tab, text='Album Art')
-        # Info tab
-        self.info_tab = InfoFrame(self, self.state_vars)
-        self.add(self.info_tab, text='Info')
         # Settings tab
         self.settings_tab = SettingsFrame(self, self.state_vars)
         self.add(self.settings_tab, text='Settings')
+        # Info tab
+        self.info_tab = InfoFrame(self, self.state_vars)
+        self.add(self.info_tab, text='Info')
+        # Art tab
+        self.art_tab = AlbumArtFrame(self, self.state_vars)
+        self.add(self.art_tab, text='Artwork')
         # Radar tab
         self.radar_tab = RadarFrame(self, self.state_vars)
         self.add(self.radar_tab, text='Radar')
@@ -477,7 +477,7 @@ class AlbumArtFrame(ttk.LabelFrame):
     state_vars: State
 
     def __init__(self, master: MainTabContainer, state: State):
-        super().__init__(master, text='Artwork')
+        super().__init__(master, text='Station/Album Artwork')
         self.state_vars = state
         self.after(str(Root.EVENT_UPDATE_INTERVAL), self.refresh_artwork)
         self.artwork_panel = ImagePanel(self, (20, 20))
@@ -543,12 +543,13 @@ class InputField:
         input_elem: ttk.Widget,
         input_var: tkinter.Variable,
         label: str,
+        label_pad_y: int = 5
     ):
         # Setup label
         self.label_elem = ttk.Label(
             master=form.label_frame, text=f'{label}:', justify=tkinter.RIGHT
         )
-        self.label_elem.pack(side=tkinter.TOP, anchor='e', pady=5)
+        self.label_elem.pack(side=tkinter.TOP, anchor='e', pady=label_pad_y)
         # Setup input
         self.input_elem = input_elem
         self.input_elem.pack(side=tkinter.TOP, fill=tkinter.X, anchor='w', pady=5)
@@ -655,7 +656,7 @@ class FileInput(InputField):
         input_elem = FileInputElement(form.input_frame, input_var)
         input_elem.configure(state=tkinter.DISABLED)
         super().__init__(
-            form=form, input_elem=input_elem, input_var=input_var, label=label
+            form=form, input_elem=input_elem, input_var=input_var, label=label, label_pad_y=7
         )
 
     def set_visibility(self, visible: bool):
@@ -819,7 +820,7 @@ class DropdownInput(InputField):
         self.options = options
         input_elem = ttk.OptionMenu(form.input_frame, input_var, default, *self.options)
         super().__init__(
-            form=form, input_elem=input_elem, input_var=input_var, label=label
+            form=form, input_elem=input_elem, input_var=input_var, label=label, label_pad_y=7
         )
 
 
@@ -942,13 +943,13 @@ class IQFileSettings(GenericStationSettings):
     iq_file: FileInput
 
     def __init__(self, master, state: State):
-        super().__init__(master=master, state=state, name='IQ Input File')
+        super().__init__(master=master, state=state, name='IQ File')
         self.setup_components()
 
     def setup_components(self):
         # IQ file input input
         self.iq_file = FileInput(
-            self, label='Frequency', input_var=self.state_vars.iq_file,
+            self, label='IQ File', input_var=self.state_vars.iq_file,
         )
         super().setup_components()
 
