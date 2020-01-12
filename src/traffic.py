@@ -124,6 +124,3 @@ class TrafficMapManager:
     @traffic_map.setter
     def traffic_map(self, value: ImageType):
         self._traffic_map = value
-        if self.do_save and False not in self.tiles:
-            self.save()
-        return True
