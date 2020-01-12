@@ -152,6 +152,7 @@ class State:
     frequency: tkinter.StringVar
     program: tkinter.StringVar
     iq_file: tkinter.StringVar
+    nrsc_path: tkinter.StringVar
     gain: tkinter.StringVar
     ppm_error: tkinter.StringVar
     device: tkinter.StringVar
@@ -165,7 +166,7 @@ class State:
         self.frequency = tkinter.StringVar()
         self.program = tkinter.StringVar()
         self.iq_file = tkinter.StringVar()
-        self.gain = tkinter.StringVar()
+        self.nrsc_path = tkinter.StringVar(value=user_config.nrsc5_path.get())
         self.gain = tkinter.StringVar(value=user_config.gain.get())
         self.ppm_error = tkinter.StringVar(value=user_config.ppm.get())
         self.device = tkinter.StringVar(value=user_config.device.get())
@@ -303,7 +304,7 @@ class Root(tkinter.Tk):
         """
         Start NRSC5 program, decoding from RTL device.
         """
-        self.nrsc5 = NRSC5Program(Path('/usr/local/bin/nrsc5'))
+        self.nrsc5 = NRSC5Program(Path(self.state_vars.nrsc_path.get()))
         gain = self.state_vars.gain.get()
         self.nrsc5.config_channel_tune(
             freq=float(self.state_vars.frequency.get()),
@@ -319,7 +320,7 @@ class Root(tkinter.Tk):
         """
         Start NRSC5 program, reading from IQ file.
         """
-        self.nrsc5 = NRSC5Program(Path('/usr/local/bin/nrsc5'))
+        self.nrsc5 = NRSC5Program(Path(self.state_vars.nrsc_path.get()))
         self.nrsc5.config_iq_read(
             iq_file=Path(self.state_vars.iq_file.get()),
             program=int(self.state_vars.program.get()) - 1,
@@ -666,6 +667,7 @@ class SettingsFrame(Form):
     """
 
     state_vars: State
+    nrsc5_path: 'FileInput'
     gain: 'DropdownInput'
     ppm_error: 'DropdownInput'
     device: 'DropdownInput'
@@ -676,6 +678,10 @@ class SettingsFrame(Form):
             master, name='Settings', on_submit=self.save, submit_text='Save'
         )
         self.state_vars = state
+        # NRSC5 input
+        self.nrsc5_path = FileInput(
+            self, label='NRSC5 Executable', input_var=self.state_vars.nrsc_path
+        )
         # Gain input
         self.gain = DropdownInput(
             self,
@@ -703,6 +709,7 @@ class SettingsFrame(Form):
         Handle form save.
         """
         # Set config values
+        user_config.nrsc5_path.set(self.state_vars.nrsc_path.get())
         user_config.gain.set(self.state_vars.gain.get())
         user_config.ppm.set(self.state_vars.ppm_error.get())
         user_config.device.set(self.state_vars.device.get())

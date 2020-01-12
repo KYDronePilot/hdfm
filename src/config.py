@@ -143,12 +143,14 @@ class UserConfig(Config):
     User-changeable config items.
     """
 
+    nrsc5_path: ConfigEntry
     gain: ConfigEntry
     ppm: ConfigEntry
     device: ConfigEntry
 
     def __init__(self, config_file: Path):
         super().__init__(config_file)
+        self.nrsc5_path = ConfigEntry(key='nrsc5_path', value='/usr/local/bin/nrsc5')
         self.gain = ConfigEntry(key='gain', value='auto')
         self.ppm = ConfigEntry(key='ppm', value='0')
         self.device = ConfigEntry(key='device', value='0')
@@ -161,7 +163,7 @@ class UserConfig(Config):
 
 
 # Setup config dirs
-dirs = ApplicationDirectories(appname='hdfm', appauthor='kydronepilot', version='0.0.1')
+dirs = ApplicationDirectories(appname='hdfm', appauthor='kydronepilot', version='0.0.2')
 config_dir = dirs.user_config_dir
 # Create if not exists
 if not config_dir.exists():
