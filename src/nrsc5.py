@@ -97,31 +97,31 @@ class KeyValArg(Arg):
     """
 
     _flag: str
-    _value: Optional[str]
+    value: Optional[str]
     _is_required: bool
 
     def __init__(self, name: str, flag: str, description: str = '', is_required: bool = False):
         super().__init__(name, description)
         self._flag = flag
-        self._value = None
+        self.value = None
         self._is_required = is_required
 
     def format_arg(self) -> List[str]:
         # Ensure value provided if required
-        if self._value is None:
+        if self.value is None:
             if self._is_required:
                 raise Exception(f'Value for "{self._flag}" not provided, but is required.')
             return []
-        return [self._flag, self._value]
+        return [self._flag, self.value]
 
     def set_arg(self, value: Optional[str]):
-        self._value = value
+        self.value = value
 
     def clear(self):
         """
         Clear argument value, if any.
         """
-        self._value = None
+        self.value = None
 
 
 class PositionalArg(Arg):
@@ -438,12 +438,17 @@ class NRSC5Program:
             Command line args to execute program with
         """
         boolean_args = Arg.format_multiple_args([self.version, self.q])
+        # Exclude gain if set to auto
+        if self.gain.value == '-1.0':
+            gain_arg = [self.gain]
+        else:
+            gain_arg = []
         key_val_args = Arg.format_multiple_args(
             [
                 self.log_level,
                 self.device_index,
                 self.ppm_error,
-                self.gain,
+                *gain_arg,
                 self.iq_input,
                 self.iq_output,
                 self.wav_output,
@@ -480,7 +485,7 @@ class NRSC5Program:
             program: int,
             device_index: Optional[int] = None,
             ppm_error: Optional[int] = None,
-            gain: Optional[int] = None
+            gain: Optional[float] = None
     ):
         """
         Configure NRSC5 to tune rtl-sdr to a particular frequency.

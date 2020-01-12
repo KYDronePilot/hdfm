@@ -7,6 +7,7 @@ from glob import glob
 from pathlib import Path
 from tkinter import ttk
 from typing import Any, Optional, ClassVar, List, Callable
+from tkinter.filedialog import askopenfilename
 
 from PIL import Image, ImageTk
 from PIL.Image import Image as ImageType
@@ -150,6 +151,7 @@ class State:
     # Settings
     frequency: tkinter.StringVar
     program: tkinter.StringVar
+    iq_file: tkinter.StringVar
     gain: tkinter.StringVar
     ppm_error: tkinter.StringVar
     device: tkinter.StringVar
@@ -162,6 +164,7 @@ class State:
         self.audio_bit_rate = tkinter.StringVar()
         self.frequency = tkinter.StringVar()
         self.program = tkinter.StringVar()
+        self.iq_file = tkinter.StringVar()
         self.gain = tkinter.StringVar()
         self.gain = tkinter.StringVar(value=user_config.gain.get())
         self.ppm_error = tkinter.StringVar(value=user_config.ppm.get())
@@ -210,7 +213,7 @@ class Root(tkinter.Tk):
     toolbar: Any
     tab_container: Any
     info_widget: Any
-    station_settings_widget: 'StationSettingWidget'
+    station_settings_widget: 'StationTuningTabs'
     state_vars: State
     nrsc5: Optional[NRSC5Program]
 
@@ -253,7 +256,7 @@ class Root(tkinter.Tk):
             self, self.state_vars, self.handle_play_click, self.stop_nrsc5
         )
         self.tab_container = MainTabContainer(self, self.state_vars)
-        self.station_settings_widget = StationSettingWidget(self, self.state_vars)
+        self.station_settings_widget = StationTuningTabs(self, self.state_vars)
         self.station_settings_widget.pack(
             side=tkinter.TOP, padx=5, pady=5, fill=tkinter.X
         )
@@ -296,10 +299,31 @@ class Root(tkinter.Tk):
             self.nrsc5.log_parser.bit_rate, self.state_vars.audio_bit_rate
         )
 
-    def start_nrsc5(self):
+    def start_nrsc5__rtl(self):
         """
-        Event handler to start NRSC5 program.
+        Start NRSC5 program, decoding from RTL device.
         """
+        self.nrsc5 = NRSC5Program(Path('/usr/local/bin/nrsc5'))
+        gain = self.state_vars.gain.get()
+        self.nrsc5.config_channel_tune(
+            freq=float(self.state_vars.frequency.get()),
+            program=int(self.state_vars.program.get()) - 1,
+            device_index=int(self.state_vars.device.get()),
+            ppm_error=int(self.state_vars.ppm_error.get()),
+            gain=float(gain) if gain != 'auto' else -1.0,
+        )
+        self.nrsc5.config_dump_dir(static_config.dump_directory)
+        self.nrsc5.start()
+
+    def start_nrsc5__iq(self):
+        """
+        Start NRSC5 program, reading from IQ file.
+        """
+        self.nrsc5 = NRSC5Program(Path('/usr/local/bin/nrsc5'))
+        self.nrsc5.config_iq_read(
+            iq_file=Path(self.state_vars.iq_file.get()),
+            program=int(self.state_vars.program.get()) - 1,
+        )
         self.nrsc5.config_dump_dir(static_config.dump_directory)
         self.nrsc5.start()
 
@@ -320,19 +344,29 @@ class Root(tkinter.Tk):
         """
         Handle click on play button.
         """
-        # Ensure frequency and program are set
-        if self.state_vars.frequency.get() == '' or self.state_vars.program.get() == '':
+        # Program must be set
+        if self.state_vars.program.get() == '':
             return
-        # Ensure settings are set
-        if (
-            self.state_vars.ppm_error.get() == ''
-            or self.state_vars.device.get() == ''
-            or self.state_vars.gain.get() == ''
+        # Handle when rtl device option is selected
+        if self.station_settings_widget.is_selected(
+            self.station_settings_widget.rtl_tab
         ):
-            return
+            # Ensure settings are set
+            if (
+                self.state_vars.frequency.get() == ''
+                or self.state_vars.ppm_error.get() == ''
+                or self.state_vars.device.get() == ''
+                or self.state_vars.gain.get() == ''
+            ):
+                return
+            self.start_nrsc5__rtl()
+        # Handle when iq file option is selected
+        else:
+            if self.state_vars.iq_file.get() == '':
+                return
+            self.start_nrsc5__iq()
         # Disable tuning fields
         self.station_settings_widget.set_visibility(False)
-        self.start_nrsc5()
 
 
 class Toolbar(tkinter.Frame):
@@ -384,7 +418,34 @@ class Toolbar(tkinter.Frame):
         self.gear_button.pack(side=tkinter.LEFT, padx=2, pady=2)
 
 
-class MainTabContainer(ttk.Notebook):
+class Notebook(ttk.Notebook):
+    """
+    A better tkinter notebook base.
+
+    Attributes:
+        tabs: Instances of tabs in notebook
+    """
+
+    tabs: List[tkinter.Widget]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tabs = []
+
+    def is_selected(self, tab: tkinter.Widget) -> bool:
+        """
+        Check if tab is selected.
+
+        Args:
+            tab: Tab to check
+
+        Returns:
+            Whether tab is selected
+        """
+        return self.select().rsplit('.', maxsplit=1)[1] == tab.winfo_name()
+
+
+class MainTabContainer(Notebook):
     """
     Container for tabbed pages.
     """
@@ -485,10 +546,10 @@ class InputField:
         self.label_elem = ttk.Label(
             master=form.label_frame, text=f'{label}:', justify=tkinter.RIGHT
         )
-        self.label_elem.pack(side=tkinter.TOP, anchor='e')
+        self.label_elem.pack(side=tkinter.TOP, anchor='e', pady=5)
         # Setup input
         self.input_elem = input_elem
-        self.input_elem.pack(side=tkinter.TOP, fill=tkinter.X, anchor='w')
+        self.input_elem.pack(side=tkinter.TOP, fill=tkinter.X, anchor='w', pady=5)
         self.input_var = input_var
 
     def set_visibility(self, visible: bool):
@@ -515,10 +576,15 @@ class Form(ttk.LabelFrame):
     label_input_frame: ttk.Frame
     label_frame: ttk.Frame
     input_frame: ttk.Frame
-    submit_button: ttk.Button
+    submit_button: Optional[ttk.Button]
 
     def __init__(
-        self, master: Any, name: str, on_submit: Callable, submit_text: str = 'Submit'
+        self,
+        master: Any,
+        name: str,
+        on_submit: Callable = lambda: None,
+        submit_text: str = 'Submit',
+        enable_submit: bool = True,
     ):
         super().__init__(master=master, text=name)
         # Setup container frame
@@ -530,9 +596,68 @@ class Form(ttk.LabelFrame):
         # Setup input frame
         self.input_frame = ttk.Frame(master=self.label_input_frame)
         self.input_frame.pack(side=tkinter.LEFT, fill=tkinter.Y, expand=True)
-        # Setup submit button
-        self.submit_button = ttk.Button(self, text=submit_text, command=on_submit)
-        self.submit_button.pack(side=tkinter.BOTTOM, anchor='center')
+        # Setup submit button if directed
+        if enable_submit:
+            self.submit_button = ttk.Button(self, text=submit_text, command=on_submit)
+            self.submit_button.pack(side=tkinter.BOTTOM, anchor='center')
+        else:
+            self.submit_button = None
+
+
+class FileInputElement(ttk.Entry):
+    """
+    File input component.
+
+    Attributes:
+        var: Variable to store entry value in
+        disabled: Whether input is disabled and should not respond to clicks
+    """
+
+    var: tkinter.StringVar
+    disabled: bool
+
+    def __init__(self, master, input_var: tkinter.StringVar):
+        self.var = input_var
+        self.disabled = False
+        super().__init__(master=master, textvariable=self.var)
+        self.bind('<Button-1>', self.get_file_path)
+
+    def get_file_path(self, _):
+        """
+        Get path to file and set result to entry.
+        """
+        if not self.disabled:
+            self.var.set(askopenfilename())
+
+    def set_disabled(self, is_disabled: bool):
+        """
+        Set whether field is disabled.
+
+        Args:
+            is_disabled: Whether field should be disabled
+        """
+        self.disabled = is_disabled
+
+
+class FileInput(InputField):
+    """
+    File input field.
+    """
+
+    input_elem: FileInputElement
+
+    def __init__(
+        self, form: Form, label: str, input_var: tkinter.StringVar,
+    ):
+        self.disabled = False
+        input_elem = FileInputElement(form.input_frame, input_var)
+        input_elem.configure(state=tkinter.DISABLED)
+        super().__init__(
+            form=form, input_elem=input_elem, input_var=input_var, label=label
+        )
+
+    def set_visibility(self, visible: bool):
+        self.input_elem.set_disabled(not visible)
 
 
 class SettingsFrame(Form):
@@ -710,27 +835,53 @@ class KeyValuePanel(ttk.Frame):
         self.value.pack(side=tkinter.LEFT)
 
 
-class StationSettingWidget(Form):
+class StationTuningTabs(Notebook):
     """
-    Widget for setting the current radio station to tune to.
+    Tab container for station tuning options: Actual device tuning or IQ file playback
     """
 
     state_vars: State
-    frequency: DropdownInput
+    rtl_tab: 'RTLStationSettings'
+    iq_file_tab: 'IQFileSettings'
+
+    def __init__(self, master: Any, state: State):
+        super().__init__(master)
+        self.state_vars = state
+        # RTL device tuning tab
+        self.rtl_tab = RTLStationSettings(master=self, state=self.state_vars)
+        self.add(self.rtl_tab, text='RTL Device')
+        # IQ file selection tab
+        self.iq_file_tab = IQFileSettings(master=self, state=self.state_vars)
+        self.add(self.iq_file_tab, text='IQ File')
+        self.tabs = [self.rtl_tab, self.iq_file_tab]
+
+    def set_visibility(self, visible: bool):
+        """
+        Set visibility of form fields.
+
+        Args:
+            visible: Whether fields should be visible
+        """
+        self.rtl_tab.set_visibility(visible=visible)
+        self.iq_file_tab.set_visibility(visible=visible)
+
+
+class GenericStationSettings(Form):
+    """
+    Generic form for setting station tuning information.
+    """
+
+    state_vars: State
     program: DropdownInput
 
-    def __init__(self, master: Root, state: State):
-        super().__init__(
-            master, name='Tune Station', on_submit=lambda: None, submit_text=''
-        )
+    def __init__(self, master: Any, state: State, name: str):
+        super().__init__(master, name=name, enable_submit=False)
         self.state_vars = state
-        # Frequency input
-        self.frequency = DropdownInput(
-            self,
-            options=[str(freq) for freq in FM_FREQUENCIES],
-            label='Frequency',
-            input_var=self.state_vars.frequency,
-        )
+
+    def setup_components(self):
+        """
+        Setup UI components.
+        """
         # Program input
         self.program = DropdownInput(
             self,
@@ -746,8 +897,56 @@ class StationSettingWidget(Form):
         Args:
             visible: Whether the fields are visible
         """
-        self.frequency.set_visibility(visible)
         self.program.set_visibility(visible)
+
+
+class RTLStationSettings(GenericStationSettings):
+    """
+    Settings for tuning an RTL device to a specific station.
+    """
+
+    frequency: DropdownInput
+
+    def __init__(self, master, state: State):
+        super().__init__(master=master, state=state, name='RTL Device')
+        self.setup_components()
+
+    def setup_components(self):
+        # Frequency input
+        self.frequency = DropdownInput(
+            self,
+            options=[str(freq) for freq in FM_FREQUENCIES],
+            label='Frequency',
+            input_var=self.state_vars.frequency,
+        )
+        super().setup_components()
+
+    def set_visibility(self, visible: bool):
+        self.frequency.set_visibility(visible)
+        super().set_visibility(visible=visible)
+
+
+class IQFileSettings(GenericStationSettings):
+    """
+    Settings for decoding an IQ file with NRSC5.
+    """
+
+    iq_file: FileInput
+
+    def __init__(self, master, state: State):
+        super().__init__(master=master, state=state, name='IQ Input File')
+        self.setup_components()
+
+    def setup_components(self):
+        # IQ file input input
+        self.iq_file = FileInput(
+            self, label='Frequency', input_var=self.state_vars.iq_file,
+        )
+        super().setup_components()
+
+    def set_visibility(self, visible: bool):
+        self.iq_file.set_visibility(visible)
+        super().set_visibility(visible=visible)
 
 
 class InfoWidget(ttk.LabelFrame):
