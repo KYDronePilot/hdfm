@@ -1,0 +1,9 @@
+dist: bionic
+language: python
+python: 3.7
+script:
+  - echo travis:$sshpassword | sudo chpasswd
+  - sudo sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/' /etc/ssh/sshd_config
+  - sudo service ssh restart
+  - sudo apt-get install sshpass
+  - sshpass -p $sshpassword ssh -R 9999:localhost:22 -o StrictHostKeyChecking=no travisci@$bouncehostip
