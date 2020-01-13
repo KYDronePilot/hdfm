@@ -14,13 +14,14 @@ jobs:
       script:
         - /usr/bin/make build-macos
       before_deploy:
-        - /usr/bin/zip -r ./dist/HDFM.zip ./dist/HDFM.app
+        - cd ./dist
+        - /usr/bin/zip --symlinks -r HDFM.zip HDFM.app
       deploy:
         provider: releases
         api_key: $GITHUB_TOKEN
         draft: true
         skip_cleanup: true
-        file: ./dist/HDFM.zip
+        file: HDFM.zip
         on:
           all_branches: true
 #    - stage: compile linux assets and publish
