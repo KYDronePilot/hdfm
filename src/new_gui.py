@@ -391,14 +391,18 @@ class Toolbar(tkinter.Frame):
         self.pack(side=tkinter.TOP, fill=tkinter.X)
         self.state_vars = state
         # Play button
-        self.play_image = Image.open('icons/play.png')
+        self.play_image = Image.open(
+            str(static_config.icons_directory / Path('play.png'))
+        )
         self.play_image_elem = ImageTk.PhotoImage(self.play_image)
         self.play_button = tkinter.Button(
             self, image=self.play_image_elem, relief=tkinter.FLAT, command=play_handler
         )
         self.play_button.pack(side=tkinter.LEFT, padx=2, pady=2)
         # Stop button
-        self.stop_image = Image.open('icons/stop.png')
+        self.stop_image = Image.open(
+            str(static_config.icons_directory / Path('stop.png'))
+        )
         self.stop_image_elem = ImageTk.PhotoImage(self.stop_image)
         self.stop_button = tkinter.Button(
             self, image=self.stop_image_elem, relief=tkinter.FLAT, command=stop_handler

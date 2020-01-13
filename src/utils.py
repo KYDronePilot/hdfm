@@ -2,8 +2,10 @@
 Utility functions.
 """
 
+import sys
 from datetime import datetime
-from typing import List
+from pathlib import Path
+from typing import List, Optional
 
 
 def timestamp(time: datetime = datetime.now()) -> str:
@@ -32,3 +34,24 @@ def get_all_gain_levels() -> List[float]:
         gains.append(current_gain)
         current_gain = round(current_gain + 0.1, 1)
     return gains
+
+
+def is_frozen() -> bool:
+    """
+    Check if running in frozen environment (with PyInstaller).
+
+    Returns:
+        Whether running in frozen environment
+    """
+    return hasattr(sys, '_MEIPASS')
+
+
+def frozen_resource_dir() -> Optional[Path]:
+    """
+    Get frozen resource directory.
+
+    Returns:
+        Frozen resource directory if frozen, else None
+    """
+    if is_frozen():
+        return Path(sys._MEIPASS)

@@ -5,9 +5,11 @@ import json
 import shutil
 import tempfile
 from pathlib import Path
-from typing import List, Any, ClassVar
+from typing import List, Any
 
 from appdirs import AppDirs
+
+from utils import frozen_resource_dir, is_frozen
 
 
 class ApplicationDirectories(AppDirs):
@@ -114,33 +116,60 @@ class StaticConfig:
     Static configuration (not editable by user; values dynamically generated or stored in source code).
 
     Attributes:
-        project_root: Root of project
         font_file: Path to font file
         main_map_file: Main US map file
         dump_directory: Directory to dump NRSC5 output to
         cache_directory: Directory to save cache files to
+        icons_directory: GUI icons directory
     """
 
-    project_root: ClassVar[Path] = Path(__file__).parent.parent
-    font_file: ClassVar[Path] = project_root / Path('font') / Path(
-        'GlacialIndifference-Regular.otf'
-    )
-    main_map_file: ClassVar[Path] = project_root / Path('maps') / Path('us_map.png')
-    dump_directory: ClassVar[Path] = Path(tempfile.gettempdir()) / Path('nrsc5_dump')
-    cache_directory: ClassVar[Path] = Path(tempfile.gettempdir()) / Path('nrsc5_cache')
+    font_file: Path
+    main_map_file: Path
+    dump_directory: Path
+    cache_directory: Path
+    icons_directory: Path
 
-    @classmethod
-    def setup(cls):
+    def __init__(self):
+        # Handle differently if frozen
+        if is_frozen():
+            self.init_frozen()
+        else:
+            self.init_source()
+        self.dump_directory = Path(tempfile.gettempdir()) / Path('nrsc5_dump')
+        self.cache_directory = Path(tempfile.gettempdir()) / Path('nrsc5_cache')
+
+    def init_frozen(self):
+        """
+        Set config values differing when frozen.
+        """
+        # self.project_root = frozen_resource_dir() /
+        frozen_resources = frozen_resource_dir()
+        self.font_file = frozen_resources / Path('GlacialIndifference-Regular.otf')
+        self.main_map_file = frozen_resources / Path('us_map.png')
+        self.icons_directory = frozen_resources / Path('icons')
+
+    def init_source(self):
+        """
+        Set config values differing when NOT frozen (running from source).
+        """
+        project_root = Path(__file__).parent.parent
+        self.font_file = (
+            project_root / Path('font') / Path('GlacialIndifference-Regular.otf')
+        )
+        self.main_map_file = project_root / Path('maps') / Path('us_map.png')
+        self.icons_directory = project_root / Path('icons')
+
+    def setup(self):
         """
         Perform any setup tasks for static config.
         """
         # Clean dump directory
-        if cls.dump_directory.exists():
-            shutil.rmtree(cls.dump_directory)
-        cls.dump_directory.mkdir()
+        if self.dump_directory.exists():
+            shutil.rmtree(self.dump_directory)
+        self.dump_directory.mkdir()
         # Ensure cache directory exists
-        if not cls.cache_directory.exists():
-            cls.cache_directory.mkdir()
+        if not self.cache_directory.exists():
+            self.cache_directory.mkdir()
 
 
 class UserConfig(Config):
