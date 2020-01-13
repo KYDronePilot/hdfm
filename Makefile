@@ -5,9 +5,6 @@ MACOS_SPEC=utils/pyinstaller_mac.spec
 UBUNTU_SPEC=utils/pyinstaller_ubuntu.spec
 WINDOWS_SPEC=utils/pyinstaller_windows.spec
 
-include .env
-export $(shell sed 's/=.*//' .env)
-
 install-ubuntu-requirements:
 	sudo apt-get update
 	sudo apt-get install -y python3-venv virtualenv python3-dev python3-tk tk8.6-dev tcl8.6-dev

@@ -1,9 +1,29 @@
-dist: bionic
-language: python
-python: 3.7
-script:
-  - echo travis:$sshpassword | sudo chpasswd
-  - sudo sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/' /etc/ssh/sshd_config
-  - sudo service ssh restart
-  - sudo apt-get install sshpass
-  - sshpass -p $sshpassword ssh -R 9999:localhost:22 -o StrictHostKeyChecking=no travisci@$bouncehostip
+jobs:
+  include:
+    - stage: Build macOS App
+      os: osx
+      before_script:
+        # Install and setup macOS python pkg
+        - /usr/bin/curl https://www.python.org/ftp/python/3.7.6/python-3.7.6-macosx10.9.pkg -o /tmp/python-3.7.6-macosx10.9.pkg
+        - sudo /usr/sbin/installer -pkg /tmp/python-3.7.6-macosx10.9.pkg -target /
+        - /Applications/Python\ 3.7/Install\ Certificates.command
+        - export PYTHON="/Library/Frameworks/Python.framework/Versions/3.7/bin/python3.7"
+      env:
+        - PYTHON="/Library/Frameworks/Python.framework/Versions/3.7/bin/python3.7"
+        - PROJECT_PATH=$TRAVIS_BUILD_DIR
+      script:
+        - /usr/bin/make build-macos
+      before_deploy:
+        - /usr/bin/zip -r ./dist/HDFM.zip ./dist/HDFM.app
+      deploy:
+        provider: releases
+        api_key: $GITHUB_TOKEN
+        draft: true
+        skip_cleanup: true
+        file: ./dist/HDFM.zip
+        on:
+          all_branches: true
+#    - stage: compile linux assets and publish
+#      deploy:
+#        <<: *deploy_base
+#        draft: false
