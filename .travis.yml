@@ -26,6 +26,7 @@ jobs:
           all_branches: true
     - stage: Build Windows App
       os: windows
+      language: shell
       before_script:
         - choco install python --version=3.7.6
       env:
