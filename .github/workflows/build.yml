@@ -1,4 +1,4 @@
-name: Build macOS
+name: Build
 
 on: [push]
 
@@ -57,3 +57,24 @@ jobs:
         with:
           name: HDFM.exe
           path: ./dist/HDFM.exe
+  build-ubuntu:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Run build script
+        env:
+          PYTHON: python
+        shell: bash
+        run: |
+          build_scripts/build_ubuntu.sh
+      - name: Upload Ubuntu Executable
+        uses: actions/upload-artifact@v1
+        with:
+          name: HDFM
+          path: ./dist/hdfm
