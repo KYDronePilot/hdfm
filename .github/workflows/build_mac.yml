@@ -3,7 +3,7 @@ name: Build macOS
 on: [push]
 
 jobs:
-  build:
+  build-mac:
 
     runs-on: macos-latest
 #    strategy:
@@ -36,3 +36,24 @@ jobs:
       with:
         name: HDFM.zip
         path: ./dist/HDFM.zip
+  build-windows:
+
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Run build script
+        env:
+          PYTHON: python
+        shell: cmd
+        run: |
+          build_scripts\build_windows.bat
+      - name: Upload Windows Executable
+        uses: actions/upload-artifact@v1
+        with:
+          name: HDFM.exe
+          path: ./dist/HDFM.exe
