@@ -24,6 +24,24 @@ jobs:
         file: HDFM.zip
         on:
           all_branches: true
+    - stage: Build Windows App
+      os: windows
+      before_script:
+        - choco install python --version=3.7.6
+      env:
+        - PYTHON="C:\ProgramData\chocolatey\bin\python37.exe"
+      script:
+        - .\build_scripts\build_windows.bat
+      before_deploy:
+        - cd .\dist
+      deploy:
+        provider: releases
+        api_key: $GITHUB_TOKEN
+        draft: true
+        skip_cleanup: true
+        file: HDFM.exe
+        on:
+          all_branches: true
 #    - stage: compile linux assets and publish
 #      deploy:
 #        <<: *deploy_base
