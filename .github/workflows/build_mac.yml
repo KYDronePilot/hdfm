@@ -1,0 +1,31 @@
+name: Build macOS
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+#    strategy:
+#      matrix:
+#        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+    env:
+      PYTHON: '/Library/Frameworks/Python.framework/Versions/3.7/bin/python3.7'
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Python 3.7 macOS pkg
+      run: |
+        /usr/bin/curl https://www.python.org/ftp/python/3.7.6/python-3.7.6-macosx10.9.pkg -o /tmp/python-3.7.6-macosx10.9.pkg
+        sudo /usr/sbin/installer -pkg /tmp/python-3.7.6-macosx10.9.pkg -target /
+        /Applications/Python\ 3.7/Install\ Certificates.command
+    - name: Install dependencies
+      run: |
+        ${PYTHON} -m pip install --upgrade pip
+        ${PYTHON} -m pip install -r requirements.txt
+    - name: Run build script
+      run: |
+        export PROJECT_PATH=$GITHUB_WORKSPACE
+        /usr/bin/make build-macos
+        ls
+        ls dist
