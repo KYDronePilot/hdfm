@@ -76,6 +76,8 @@ jobs:
       - name: Run build script
         run: |
           docker exec -i -w /src hdfm_builder bash build_scripts/build_ubuntu.sh
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v1
       - name: Upload Ubuntu Executable
         uses: actions/upload-artifact@v1
         with:

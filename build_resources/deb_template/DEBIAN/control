@@ -1,0 +1,8 @@
+Package: hdfm
+Version: 0.0.1
+Section: base
+Priority: optional
+Architecture: {arch}
+Maintainer: test@email.com
+Description: Test application
+ Description indented using one space
