@@ -61,6 +61,9 @@ jobs:
 
     runs-on: ubuntu-18.04
 
+    env:
+      BUILD_ARCH: amd64
+
     steps:
       - uses: actions/checkout@v2
       - name: Create container
@@ -78,8 +81,7 @@ jobs:
           docker exec -i -w /src hdfm_builder bash build_scripts/build_ubuntu.sh
       - name: Create Debian Package
         run: |
-          export BUILD_ARCH=amd64
-          sudo ./build_scripts/build_deb.sh ./build_resources/deb_template ./dist/hdfm ./build
+          sudo -E ./build_scripts/build_deb.sh ./build_resources/deb_template ./dist/hdfm ./build
       - name: Upload amd64 Debian Package
         uses: actions/upload-artifact@v1
         with:
