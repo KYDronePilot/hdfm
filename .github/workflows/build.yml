@@ -65,13 +65,6 @@ jobs:
     strategy:
       matrix:
         arch: [amd64, arm64, armhf]
-        include:
-          - arch: amd64
-            image: ubuntu:18.04
-          - arch: arm64
-            image: multiarch/ubuntu-core:arm64-bionic
-          - arch: armhf
-            image: multiarch/ubuntu-core:armhf-bionic
 
     env:
       BUILD_ARCH: ${{ matrix.arch }}
@@ -82,15 +75,23 @@ jobs:
         if: matrix.arch == 'arm64' || matrix.arch == 'armhf'
         run: |
           docker run --rm --privileged multiarch/qemu-user-static:register --reset
-      - name: Set up/Build Executable
-        uses: docker://${{ matrix.image }}
-        with:
-          args: |
-            bash -c "\
-            export DEBIAN_FRONTEND=noninteractive \
-            && apt-get update \
-            && apt-get install -y python3.7 python3.7-dev python3.7-venv virtualenv python3-tk tk8.6-dev tcl8.6-dev libjpeg-dev zlib1g-dev \
-            && ./build_scripts/build_ubuntu.sh"
+      - <<: &setup_build_exe
+          name: Set up/Build Executable
+          if: matrix.arch == 'amd64'
+          uses: docker://ubuntu:18.04
+          with:
+            args: |
+              bash -c "\
+              export DEBIAN_FRONTEND=noninteractive \
+              && apt-get update \
+              && apt-get install -y python3.7 python3.7-dev python3.7-venv virtualenv python3-tk tk8.6-dev tcl8.6-dev libjpeg-dev zlib1g-dev \
+              && ./build_scripts/build_ubuntu.sh"
+      - <<: *setup_build_exe
+          if: matrix.arch == 'arm64'
+          uses: docker://multiarch/ubuntu-core:arm64-bionic
+      - <<: *setup_build_exe
+          if: matrix.arch == 'armhf'
+          uses: docker://multiarch/ubuntu-core:armhf-bionic
       - name: Create Debian Package
         run: |
           sudo -E ./build_scripts/build_deb.sh ./build_resources/deb_template ./dist/hdfm ./dist
