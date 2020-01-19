@@ -82,44 +82,36 @@ jobs:
           name: HDFM
           path: ./dist/hdfm
 
-  build-ubuntu-arm64:
+  build-arm:
 
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v2
-      - run: |
-          HOME=`realpath .`
-          docker run -v $HOME:/src --rm --privileged multiarch/qemu-user-static:register --reset
-
-      - uses: docker://multiarch/ubuntu-core:arm64-bionic
-        with:
-          args: >
-            bash -c
-            "apt-get update
-            && DEBIAN_FRONTEND=noninteractive apt-get install -y python3.7 python3.7-dev python3.7-venv virtualenv python3-tk tk8.6-dev tcl8.6-dev libjpeg-dev zlib1g-dev
-            && build_scripts/build_ubuntu.sh"
-      - name: Upload Ubuntu arm64 Executable
-        uses: actions/upload-artifact@v1
-        with:
-          name: HDFM arm64
-          path: ./dist/hdfm
-
-  build-ubuntu-armhf:
-
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch:
+          - armv7
+          - aarch64
 
     steps:
       - uses: actions/checkout@v2
       - uses: uraimo/run-on-arch-action@v1.0.6
         with:
-          architecture: armv7
+          architecture: ${{ matrix.arch }}
           distribution: ubuntu18.04
           run: |
             export DEBIAN_FRONTEND=noninteractive
             apt-get update
             apt-get install -y python3.7 python3.7-dev python3.7-venv virtualenv python3-tk tk8.6-dev tcl8.6-dev libjpeg-dev zlib1g-dev
             build_scripts/build_ubuntu.sh
+      - run: |
+          ls -la ~/
+          ls -la ~/.cache
+          ls -la ~/.cache/pip
+      - name: Cache PIP requirements
+        uses: actions/cache@v1
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-${{ matrix.arch }}
 #      - run: |
 #          HOME=`realpath .`
 #          docker run -v $HOME:/src --rm --privileged multiarch/qemu-user-static:register --reset
@@ -131,8 +123,8 @@ jobs:
 #            "apt-get update
 #            && DEBIAN_FRONTEND=noninteractive apt-get install -y python3.7 python3.7-dev python3.7-venv virtualenv python3-tk tk8.6-dev tcl8.6-dev libjpeg-dev zlib1g-dev
 #            && build_scripts/build_ubuntu.sh"
-      - name: Upload Ubuntu armhf Executable
+      - name: Upload Ubuntu ${{ matrix.arch }} Executable
         uses: actions/upload-artifact@v1
         with:
-          name: HDFM armhf
+          name: HDFM ${{ matrix.arch }}
           path: ./dist/hdfm
