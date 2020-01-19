@@ -61,9 +61,6 @@ jobs:
 
     runs-on: ubuntu-18.04
 
-    env:
-      BUILD_ARCH: amd64
-
     steps:
       - uses: actions/checkout@v2
       - name: Create container
@@ -81,6 +78,7 @@ jobs:
           docker exec -i -w /src hdfm_builder bash build_scripts/build_ubuntu.sh
       - name: Create Debian Package
         run: |
+          export BUILD_ARCH=amd64
           sudo ./build_scripts/build_deb.sh ./build_resources/deb_template ./dist/hdfm ./build
       - name: Upload amd64 Debian Package
         uses: actions/upload-artifact@v1
@@ -109,26 +107,6 @@ jobs:
             apt-get update
             apt-get install -y python3.7 python3.7-dev python3.7-venv virtualenv python3-tk tk8.6-dev tcl8.6-dev libjpeg-dev zlib1g-dev
             build_scripts/build_ubuntu.sh
-      - run: |
-          ls -la ~/
-          ls -la ~/.cache
-          ls -la ~/.cache/pip
-      - name: Cache PIP requirements
-        uses: actions/cache@v1
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-${{ matrix.arch }}
-#      - run: |
-#          HOME=`realpath .`
-#          docker run -v $HOME:/src --rm --privileged multiarch/qemu-user-static:register --reset
-#
-#      - uses: docker://multiarch/ubuntu-core:armhf-bionic
-#        with:
-#          args: >
-#            bash -c
-#            "apt-get update
-#            && DEBIAN_FRONTEND=noninteractive apt-get install -y python3.7 python3.7-dev python3.7-venv virtualenv python3-tk tk8.6-dev tcl8.6-dev libjpeg-dev zlib1g-dev
-#            && build_scripts/build_ubuntu.sh"
       - name: Upload Ubuntu ${{ matrix.arch }} Executable
         uses: actions/upload-artifact@v1
         with:
