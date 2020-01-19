@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Build deb package
 
-DEB_ROOT=$2
-EXECUTABLE=$3
-BUILD_DIR=$4
+DEB_ROOT=$1
+EXECUTABLE=$2
+BUILD_DIR=$3
 
 # Substitute env vars
 sed -i "s/{arch}/${BUILD_ARCH}/g" ${DEB_ROOT}/DEBIAN/control

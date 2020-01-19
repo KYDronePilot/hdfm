@@ -61,6 +61,9 @@ jobs:
 
     runs-on: ubuntu-18.04
 
+    env:
+      BUILD_ARCH: amd64
+
     steps:
       - uses: actions/checkout@v2
       - name: Create container
@@ -76,13 +79,14 @@ jobs:
       - name: Run build script
         run: |
           docker exec -i -w /src hdfm_builder bash build_scripts/build_ubuntu.sh
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v1
-      - name: Upload Ubuntu Executable
+      - name: Create Debian Package
+        run: |
+          sudo ./build_scripts/build_deb.sh ./build_resources/deb_template ./dist/hdfm ./build
+      - name: Upload amd64 Debian Package
         uses: actions/upload-artifact@v1
         with:
-          name: HDFM
-          path: ./dist/hdfm
+          name: HDFM amd64 deb
+          path: ./dist/hdfm.deb
 
   build-arm:
 
