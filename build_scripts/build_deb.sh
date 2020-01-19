@@ -3,7 +3,7 @@
 
 DEB_ROOT=$1
 EXECUTABLE=$2
-BUILD_DIR=$3
+DIST_DIR=$3
 
 # Substitute env vars
 sed -i "s/{arch}/${BUILD_ARCH}/g" ${DEB_ROOT}/DEBIAN/control
@@ -13,4 +13,4 @@ cp ${EXECUTABLE} ${DEB_ROOT}/usr/local/bin
 
 # Build package
 chmod 775 ${DEB_ROOT}/DEBIAN/postinst
-dpkg-deb --build ${DEB_ROOT} ${BUILD_DIR}/hdfm.deb
+dpkg-deb --build ${DEB_ROOT} ${DIST_DIR}/hdfm.deb
