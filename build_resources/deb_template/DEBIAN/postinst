@@ -1,4 +1,0 @@
-#!/bin/sh
-
-chmod +x /usr/local/bin/hdfm
-exit 0

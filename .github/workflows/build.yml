@@ -105,11 +105,8 @@ jobs:
             && apt-get update \
             && apt-get install -y python3.7 python3.7-dev python3.7-venv virtualenv python3-tk tk8.6-dev tcl8.6-dev libjpeg-dev zlib1g-dev \
             && ./build_scripts/build_ubuntu.sh"
-      - name: Create Debian Package
-        run: |
-          sudo -E ./build_scripts/build_deb.sh ./build_resources/deb_template ./dist/hdfm ./dist
-      - name: Upload ${{ matrix.arch }} Debian Package
+      - name: Upload ${{ matrix.arch }} Bundled Executable
         uses: actions/upload-artifact@v1
         with:
-          name: HDFM ${{ matrix.arch }} deb
-          path: ./dist/hdfm.deb
+          name: HDFM ${{ matrix.arch }} Linux Exec
+          path: ./dist/hdfm
