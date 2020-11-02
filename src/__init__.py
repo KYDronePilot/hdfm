@@ -1,3 +1,4 @@
+import os
 import os.path
 from os.path import dirname, abspath
 
@@ -10,3 +11,7 @@ SAVES = os.path.join(DIR, 'saves')
 DUMP = os.path.join(DIR, 'dump')
 MAPS = os.path.join(DIR, 'maps')
 MAP_FILE = os.path.join(MAPS, 'us_map.png')
+
+# Create dump dir if it doesn't exist
+if not os.path.exists(DUMP):
+    os.mkdir(DUMP)
