@@ -1,13 +1,7 @@
 # HDFM
 Displays live weather, traffic, album artwork, and song/station data received from HD Radio stations
 
-![alt text](img/traffic_map.png)
-
-Example Traffic Map
-
-![alt text](img/weather_map.png)
-
-Example Weather Map
+![Preview of app running](img/screen_shot_2.jpg)
 
 ### Overview
 **hdfm** is a Python script designed to process data broadcasted by iHeartRadio HD Radio stations and display it in 
