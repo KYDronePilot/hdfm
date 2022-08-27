@@ -23,23 +23,34 @@ Requires no internet connection, so it can be used off the grid
 
 ### macOS
 
+M1:
+
 ```bash
-curl -sSL https://raw.githubusercontent.com/hdfm/hdfm/master/install.sh > /usr/local/bin/hdfm
+sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.0/hdfm-aarch64-apple-darwin.tgz' | sudo tar xzv -C /usr/local/bin
+```
+
+Intel:
+
+```bash
+sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.0/hdfm-x86_64-apple-darwin.tgz' | sudo tar xzv -C /usr/local/bin
 ```
 
 ### Windows
 
+Run from an Administrator powershell prompt:
+
 ```powershell
-curl -sSL https://raw.githubusercontent.com/hdfm/hdfm/master/install.sh > /usr/local/bin/hdfm
+Invoke-WebRequest -Uri "https://github.com/KYDronePilot/hdfm/releases/download/v2.0.0/hdfm-x86_64-pc-windows-msvc.zip" -OutFile "$env:temp\hdfm.zip"
+Expand-Archive -Path "$env:temp\hdfm.zip" -DestinationPath C:\Windows
 ```
 
-### Linux
+<!-- ### Linux
 
 **Note**: You must have Vulcan graphics installed to run on Linux.
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/hdfm/hdfm/master/install.sh > /usr/local/bin/hdfm
-```
+``` -->
 
 ## Usage
 
