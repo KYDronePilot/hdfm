@@ -26,6 +26,11 @@ GUI is styled like a digital car stereo system, displaying:
 
 Requires no internet connection, so it can be used off the grid
 
+## Pre-requisites
+
+- An [rtl-sdr dongle](https://www.rtl-sdr.com/buy-rtl-sdr-dvb-t-dongles/)
+- The [nrsc5 program](https://github.com/theori-io/nrsc5) installed
+
 ## Installation
 
 ### macOS
@@ -61,9 +66,24 @@ curl -sSL https://raw.githubusercontent.com/hdfm/hdfm/master/install.sh > /usr/l
 
 ## Usage
 
-**Note**: [nrsc5](https://github.com/theori-io/nrsc5) must already be installed for hdfm to run.
+```
+hdfm-rs 2.0.0
 
-After installing, run `hdfm --help` to view parameters and usage.
+USAGE:
+    hdfm [OPTIONS] <frequency> <program>
+
+ARGS:
+    <frequency>    Frequency of HD radio station
+    <program>      HD radio program to tune (e.g. 1 for HD1, 2 for HD2, etc.) [possible values:
+                   1, 2, 3, 4]
+
+OPTIONS:
+    -b, --nrsc5-bin <nrsc5_bin>    Path to nrsc5 binary (use if nrsc5 is not in your PATH) [default:
+                                   nrsc5]
+    -h, --help                     Print help information
+    -s                             Disable audio output
+    -V, --version                  Print version information
+```
 
 ## Souce code access
 
@@ -84,11 +104,6 @@ You will not be permitted to distribute/publish the original and/or modified ver
 A list of nearby HD Radio stations can be found at: <https://hdradio.com/stations>
 
 In addition, the station must be operated by iHeartRadio to access weather and traffic data. A list of iHeartRadio-owned stations in the US can be found here: <https://en.wikipedia.org/wiki/List_of_radio_stations_owned_by_iHeartMedia>
-
-## Requirements
-
-- An [rtl-sdr dongle](https://www.rtl-sdr.com/buy-rtl-sdr-dvb-t-dongles/)
-- The [nrsc5 program](https://github.com/theori-io/nrsc5)
 
 ## Copyright
 
