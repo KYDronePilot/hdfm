@@ -1,71 +1,77 @@
-# HDFM
-Displays live weather, traffic, album artwork, and song/station data received from HD Radio stations
+# HDFM - HD Radio GUI
 
-![Preview of app running](img/screen_shot_2.jpg)
+View live data collected from HD Radio stations
 
-### Overview
-**hdfm** is a Python script designed to process data broadcasted by iHeartRadio HD Radio stations and display it in 
-real time. This data includes traffic and weather maps, as well as album/station art and station/song details.
+![App window](img/main_screen.png)
 
-This script sources its data from another program [nrsc5](https://github.com/theori-io/nrsc5), which was developed to
-decode HD Radio signals using an inexpensive [RTL-SDR receiver](https://www.rtl-sdr.com). More information can be 
-found on nrsc5 [here](https://theori.io/research/nrsc-5-c). If you haven't heard of an RTL-SDR receiver before or do 
-not own one, I would highly recommend purchasing one. There are many unique projects that can be done with them and 
-they are extremely inexpensive.
+## Features
 
-Some potential uses of this script include receiving weather and traffic data while off the grid (but near a radio 
-station) or creating a custom car navigation system.
+Uses [NRSC-5](https://github.com/theori-io/nrsc5) with an [RTL-SDR dongle](https://www.rtl-sdr.com/buy-rtl-sdr-dvb-t-dongles/) to display live data captured from HD Radio stations
 
-Keep in mind this program will ONLY work with iHeartRadio stations. If you encounter any problems, just open an issue
-and I'll do my best to help.
+Blazing fast, fully native Rust GUI application
 
-### Packages
+GUI is styled like a digital car stereo system, displaying:
 
- * Python 3 (preferably 3.6 or higher)
- * `python3-tk` (Default with some installations; others need it manually installed)
- * `nrsc5` (installation instructions available [here](https://github.com/theori-io/nrsc5))
+- Traffic map
+- Weather radar
+- Station/artist artwork
+- Other station/song metadata
 
-### Libraries
+Requires no internet connection, so it can be used off the grid
 
- * `Pillow` (PIL fork, `pip3 install Pillow`)
+## Installation
 
-### Other Requirements
+### macOS
 
-An RTL-SDR dongle which can be found [here](http://a.co/d/1qduCLG).
+```bash
+curl -sSL https://raw.githubusercontent.com/hdfm/hdfm/master/install.sh > /usr/local/bin/hdfm
+```
 
-### Usage:
+### Windows
 
-	Usage:  [OPTIONS]  frequency
-	
-     Option              Meaning
-     -h, --help          Show this message
-     -c <program>        HD Radio program, for stations with subchannels (default = 0)
-     -p <ppm>            PPM error correction (default = 0)
-     -s <dir>            Directory to save weather and traffic images to (default = none)
-     -l <null>           Show logging information
-	 -a <null>           Display album/station art
-### Examples:
+```powershell
+curl -sSL https://raw.githubusercontent.com/hdfm/hdfm/master/install.sh > /usr/local/bin/hdfm
+```
 
-Tune to 104.5 MHz:
+### Linux
 
-     $ ./hdfm.py 104.5
+**Note**: You must have Vulcan graphics installed to run on Linux.
 
-Tune to 104.5 MHz, display album/station artwork, and save all received maps to `saves/`:
+```bash
+curl -sSL https://raw.githubusercontent.com/hdfm/hdfm/master/install.sh > /usr/local/bin/hdfm
+```
 
-     $ ./hdfm.py -a -s saves 104.5
+## Usage
 
-Tune to 104.5 MHz, set the ppm correction to 48, and decode HD program 2 (HD2)
+**Note**: [nrsc5](https://github.com/theori-io/nrsc5) must already be installed for hdfm to run.
 
-     $ ./hdfm.py -p 48 -c 1 104.5
+After installing, run `hdfm --help` to view parameters and usage.
 
-### Compatible Stations
+## Souce code access
 
-A list of nearby HD Radio stations can be found by entering your zip code at this website:
-https://hdradio.com/stations
+This project is released as "Pay-source" software. Precompiled binaries are provided under the [Releases](https://github.com/KYDronePilot/hdfm/releases) page for anyone to use.
 
-A list of all compatible iHeartRadio stations in the US can be found here:
-https://en.wikipedia.org/wiki/List_of_radio_stations_owned_by_iHeartMedia
+If you would like to access the source code, please pay a one-time fee of $20 though GitHub Sponsors. You will then be given access to the private repository containing the code. With this access, you have permission to:
 
-The station must be HD and operated by iHeartRadio for this program to function properly.
+- Fork/clone and make modifications
+- Build and distribute your own binaries
+- Contribute back to the project and official binaries
 
-![alt text](img/screen_shot.png)
+You will not be permitted to distribute/publish the original and/or modified versions of the source code.
+
+### [Click here to get source code access](https://github.com/sponsors/KYDronePilot/sponsorships?sponsor=KYDronePilot&tier_id=208482)
+
+## Compatible radio stations
+
+A list of nearby HD Radio stations can be found at: <https://hdradio.com/stations>
+
+In addition, the station must be operated by iHeartRadio to access weather and traffic data. A list of iHeartRadio-owned stations in the US can be found here: <https://en.wikipedia.org/wiki/List_of_radio_stations_owned_by_iHeartMedia>
+
+## Requirements
+
+- An [rtl-sdr dongle](https://www.rtl-sdr.com/buy-rtl-sdr-dvb-t-dongles/)
+- The [nrsc5 program](https://github.com/theori-io/nrsc5)
+
+## Copyright
+
+Copyright (c) 2022 Michael Galliers. All Rights Reserved.
