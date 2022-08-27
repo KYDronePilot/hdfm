@@ -2,7 +2,14 @@
 
 View live data collected from HD Radio stations
 
-![App window](img/main_screen.png)
+<p align="center">
+  <img alt="App window" src="img/main_screen.png">
+</p>
+<hr>
+<p align="center">
+  <img alt="GitHub release (latest by SemVer)" src="https://img.shields.io/github/downloads/KYDronePilot/hdfm/v2.0.0/total">
+  <img alt="Language" src="https://img.shields.io/badge/language-Rust-orange">
+</p>
 
 ## Features
 
