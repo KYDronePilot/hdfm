@@ -56,13 +56,16 @@ Invoke-WebRequest -Uri "https://github.com/KYDronePilot/hdfm/releases/download/v
 Expand-Archive -Path "$env:temp\hdfm.zip" -DestinationPath C:\Windows
 ```
 
-<!-- ### Linux
+### Linux
 
-**Note**: You must have Vulcan graphics installed to run on Linux.
+**Note**: Untested on Linux, but Vulkan graphics is a requirement of underlying dependencies.
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/hdfm/hdfm/master/install.sh > /usr/local/bin/hdfm
-``` -->
+# x86_64
+sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.0/hdfm-x86_64-unknown-linux-musl.tgz' | sudo tar xzv -C /usr/local/bin
+# aarch64
+sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.0/hdfm-aarch64-unknown-linux-musl.tgz' | sudo tar xzv -C /usr/local/bin
+```
 
 ## Usage
 
