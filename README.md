@@ -90,7 +90,7 @@ OPTIONS:
     -V, --version                  Print version information
 ```
 
-## Souce code access
+## Source code access
 
 This project is released as "Pay-source" software. Precompiled binaries are provided under the [Releases](https://github.com/KYDronePilot/hdfm/releases) page for anyone to use.
 
