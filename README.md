@@ -7,7 +7,7 @@ View live data collected from HD Radio stations
 </p>
 <hr>
 <p align="center">
-  <img alt="GitHub release (latest by SemVer)" src="https://img.shields.io/github/downloads/KYDronePilot/hdfm/v2.0.0/total">
+  <img alt="GitHub release (latest by SemVer)" src="https://img.shields.io/github/downloads/KYDronePilot/hdfm/v2.0.1/total">
   <img alt="Language" src="https://img.shields.io/badge/language-Rust-orange">
 </p>
 
@@ -38,13 +38,13 @@ Requires no internet connection, so it can be used off the grid
 M1:
 
 ```bash
-sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.0/hdfm-aarch64-apple-darwin.tgz' | sudo tar xzv -C /usr/local/bin
+sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.1/hdfm-aarch64-apple-darwin.tgz' | sudo tar xzv -C /usr/local/bin
 ```
 
 Intel:
 
 ```bash
-sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.0/hdfm-x86_64-apple-darwin.tgz' | sudo tar xzv -C /usr/local/bin
+sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.1/hdfm-x86_64-apple-darwin.tgz' | sudo tar xzv -C /usr/local/bin
 ```
 
 ### Windows
@@ -52,7 +52,7 @@ sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.0/hd
 Run from an Administrator powershell prompt:
 
 ```powershell
-Invoke-WebRequest -Uri "https://github.com/KYDronePilot/hdfm/releases/download/v2.0.0/hdfm-x86_64-pc-windows-msvc.zip" -OutFile "$env:temp\hdfm.zip"
+Invoke-WebRequest -Uri "https://github.com/KYDronePilot/hdfm/releases/download/v2.0.1/hdfm-x86_64-pc-windows-msvc.zip" -OutFile "$env:temp\hdfm.zip"
 Expand-Archive -Path "$env:temp\hdfm.zip" -DestinationPath C:\Windows
 ```
 
@@ -62,15 +62,15 @@ Expand-Archive -Path "$env:temp\hdfm.zip" -DestinationPath C:\Windows
 
 ```bash
 # x86_64
-sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.0/hdfm-x86_64-unknown-linux-musl.tgz' | sudo tar xzv -C /usr/local/bin
+sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.1/hdfm-x86_64-unknown-linux-musl.tgz' | sudo tar xzv -C /usr/local/bin
 # aarch64
-sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.0/hdfm-aarch64-unknown-linux-musl.tgz' | sudo tar xzv -C /usr/local/bin
+sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.1/hdfm-aarch64-unknown-linux-musl.tgz' | sudo tar xzv -C /usr/local/bin
 ```
 
 ## Usage
 
 ```
-hdfm-rs 2.0.0
+hdfm-rs 2.0.1
 
 USAGE:
     hdfm [OPTIONS] <frequency> <program>
@@ -84,6 +84,8 @@ OPTIONS:
     -b, --nrsc5-bin <nrsc5_bin>    Path to nrsc5 binary (use if nrsc5 is not in your PATH) [default:
                                    nrsc5]
     -h, --help                     Print help information
+    -l, --log-level <log_level>    Logging level (1=error, 2=warn, 3=info, 4=debug) [default: 2]
+                                   [possible values: 1, 2, 3, 4]
     -s                             Disable audio output
     -V, --version                  Print version information
 ```
