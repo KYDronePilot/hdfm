@@ -58,7 +58,7 @@ Expand-Archive -Path "$env:temp\hdfm.zip" -DestinationPath C:\Windows
 
 ### Linux
 
-**Note**: Untested on Linux, but Vulkan graphics is a requirement of underlying dependencies.
+**Note**: Requires Vulkan graphics.
 
 ```bash
 # x86_64
