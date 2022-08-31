@@ -60,10 +60,15 @@ Expand-Archive -Path "$env:temp\hdfm.zip" -DestinationPath C:\Windows
 
 **Note**: Requires Vulkan graphics.
 
+x86_64:
+
 ```bash
-# x86_64
 sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.1/hdfm-x86_64-unknown-linux-musl.tgz' | sudo tar xzv -C /usr/local/bin
-# aarch64
+```
+
+aarch64:
+
+```bash
 sudo curl -sSL 'https://github.com/KYDronePilot/hdfm/releases/download/v2.0.1/hdfm-aarch64-unknown-linux-musl.tgz' | sudo tar xzv -C /usr/local/bin
 ```
 
