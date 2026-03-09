@@ -7,7 +7,7 @@ View live data collected from HD Radio stations
 </p>
 <hr>
 <p align="center">
-  <img alt="GitHub release (latest by SemVer)" src="https://img.shields.io/github/downloads/KYDronePilot/hdfm/v2.2.0/total">
+  <img alt="GitHub release (latest by SemVer)" src="https://img.shields.io/github/downloads/KYDronePilot/hdfm/v2.0.1/total">
   <img alt="Language" src="https://img.shields.io/badge/language-Rust-orange">
 </p>
 
